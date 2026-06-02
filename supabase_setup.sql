@@ -82,3 +82,61 @@ CREATE TABLE IF NOT EXISTS gmail_tasks (
 );
 
 ALTER TABLE gmail_tasks DISABLE ROW LEVEL SECURITY;
+
+CREATE TABLE IF NOT EXISTS recharge_offers (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  operator TEXT NOT NULL,
+  title TEXT NOT NULL,
+  description TEXT NOT NULL,
+  price NUMERIC NOT NULL,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+ALTER TABLE recharge_offers DISABLE ROW LEVEL SECURITY;
+
+CREATE TABLE IF NOT EXISTS custom_notifications (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES auth.users(id),
+  message TEXT NOT NULL,
+  is_read BOOLEAN DEFAULT false,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+ALTER TABLE custom_notifications DISABLE ROW LEVEL SECURITY;
+
+CREATE TABLE IF NOT EXISTS site_settings (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  popup_enabled BOOLEAN DEFAULT false,
+  popup_text TEXT,
+  tutorial_url TEXT,
+  review_url TEXT,
+  telegram_url TEXT
+);
+
+ALTER TABLE site_settings DISABLE ROW LEVEL SECURITY;
+
+INSERT INTO site_settings (popup_enabled, popup_text, tutorial_url, review_url, telegram_url)
+SELECT false, 'Welcome to BDPay!', 'https://youtube.com', 'https://play.google.com', 'https://t.me'
+WHERE NOT EXISTS (SELECT 1 FROM site_settings);
+
+-- Function to approve gmail task and credit user balance securely
+CREATE OR REPLACE FUNCTION approve_gmail_task(
+  p_task_id UUID,
+  p_user_id UUID,
+  p_reward NUMERIC
+) RETURNS void AS $$
+BEGIN
+  -- Update task status
+  UPDATE gmail_tasks SET status = 'approved' WHERE id = p_task_id;
+
+  -- Add reward to user's auth metadata balance
+  UPDATE auth.users
+  SET raw_user_meta_data = jsonb_set(
+    COALESCE(raw_user_meta_data, '{}'::jsonb),
+    '{balance}',
+    to_jsonb(COALESCE((raw_user_meta_data->>'balance')::numeric, 0) + p_reward)
+  )
+  WHERE id = p_user_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;

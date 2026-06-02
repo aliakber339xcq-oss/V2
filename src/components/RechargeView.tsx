@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { User } from '../types';
 import { CreditCard, CheckCircle2, ChevronRight, Phone, Smartphone, AlertCircle, ArrowLeft } from 'lucide-react';
@@ -12,14 +12,6 @@ const OPERATORS = [
   { id: 'teletalk', name: 'Teletalk', color: 'bg-green-500' },
 ];
 
-const OFFERS = [
-  { id: 1, operator: 'gp', title: 'Monthly Data Pack', desc: '30GB Internet + 800 Min', price: 499 },
-  { id: 2, operator: 'gp', title: 'Weekly Pack', desc: '10GB Internet + 200 Min', price: 198 },
-  { id: 3, operator: 'robi', title: 'Monthly Bundle', desc: '40GB Internet + 1000 Min', price: 549 },
-  { id: 4, operator: 'banglalink', title: 'Super Saver', desc: '50GB Internet + 1500 Min', price: 599 },
-  { id: 5, operator: 'airtel', title: 'Youth Pack', desc: '20GB Internet + 500 Min', price: 299 },
-];
-
 export function RechargeView({ user, onBack }: { user: User, onBack: () => void }) {
   const [step, setStep] = useState(1);
   const [phone, setPhone] = useState('');
@@ -31,6 +23,15 @@ export function RechargeView({ user, onBack }: { user: User, onBack: () => void 
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [copiedType, setCopiedType] = useState<'bkash'|'nagad'|null>(null);
+  const [offers, setOffers] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchOffers = async () => {
+      const { data } = await supabase.from('recharge_offers').select('*').eq('is_active', true);
+      if (data) setOffers(data);
+    };
+    fetchOffers();
+  }, []);
 
   const handleContinue = () => {
     if (!phone || !operator || !amount) {
@@ -176,20 +177,20 @@ export function RechargeView({ user, onBack }: { user: User, onBack: () => void 
                </h2>
                
                <div className="space-y-3">
-                 {OFFERS.map(offer => {
+                 {offers.length === 0 ? <p className="text-slate-500 text-sm">No special offers available at the moment.</p> : offers.filter(o => !operator || o.operator === operator).map(offer => {
                    const op = OPERATORS.find(o => o.id === offer.operator);
                    return (
                      <div key={offer.id} className="border border-slate-100 rounded-2xl p-4 hover:border-primary hover:shadow-md transition-all cursor-pointer bg-slate-50 group" onClick={() => handleSelectOffer(offer)}>
                         <div className="flex justify-between items-start mb-2">
                            <div>
-                             <span className={`inline-block px-2 py-0.5 text-[10px] font-black uppercase text-white rounded-md mb-1 ${op?.color}`}>{op?.name}</span>
+                             <span className={`inline-block px-2 py-0.5 text-[10px] font-black uppercase text-white rounded-md mb-1 ${op?.color || 'bg-slate-500'}`}>{op?.name || offer.operator}</span>
                              <h3 className="font-bold text-slate-800 leading-tight group-hover:text-primary transition-colors">{offer.title}</h3>
                            </div>
                            <div className="bg-slate-900 text-white font-black px-3 py-1 rounded-lg text-sm shadow-sm group-hover:bg-primary transition-colors">
                              ৳{offer.price}
                            </div>
                         </div>
-                        <p className="text-xs text-slate-500 font-medium">{offer.desc}</p>
+                        <p className="text-xs text-slate-500 font-medium">{offer.description}</p>
                      </div>
                    )
                  })}

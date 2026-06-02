@@ -6,15 +6,20 @@ import { ArrowLeft, Check, X, KeySquare, Plus, Trash2 } from 'lucide-react';
 import { motion } from 'motion/react';
 
 export function AdminPanel({ onBack }: { onBack: () => void }) {
-  const [tab, setTab] = useState<'submissions' | 'tasks' | 'keys' | 'recharges' | 'gmail'>('submissions');
+  const [tab, setTab] = useState<'submissions' | 'tasks' | 'keys' | 'recharges' | 'gmail' | 'offers' | 'notify' | 'settings'>('submissions');
   
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [recharges, setRecharges] = useState<any[]>([]);
   const [gmailTasks, setGmailTasks] = useState<any[]>([]);
+  const [rechargeOffers, setRechargeOffers] = useState<any[]>([]);
+  const [settings, setSettings] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
   const [keys, setKeys] = useState<{id: string, api_key: string}[]>([]);
   const [newKey, setNewKey] = useState('');
+  
+  const [newOffer, setNewOffer] = useState({ operator: 'gp', title: '', description: '', price: '' });
+  const [newNotification, setNewNotification] = useState({ userId: '', message: '' });
 
   const [tasks, setTasks] = useState<TaskItem[]>([]);
   const [newTaskForm, setNewTaskForm] = useState({
@@ -39,7 +44,60 @@ export function AdminPanel({ onBack }: { onBack: () => void }) {
     if (tab === 'tasks') loadTasks();
     if (tab === 'recharges') loadRecharges();
     if (tab === 'gmail') loadGmailTasks();
+    if (tab === 'offers') loadOffers();
+    if (tab === 'settings') loadSettings();
   }, [tab]);
+
+  // --------------- Settings Logic ---------------
+  const loadSettings = async () => {
+    setLoading(true);
+    const { data } = await supabase.from('site_settings').select('*').limit(1);
+    if (data && data[0]) setSettings(data[0]);
+    setLoading(false);
+  };
+
+  const saveSettings = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!settings) return;
+    await supabase.from('site_settings').update(settings).eq('id', settings.id);
+    alert('Settings saved!');
+  };
+
+  // --------------- Notify Logic ---------------
+  const sendNotification = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newNotification.userId || !newNotification.message) return;
+    await supabase.from('custom_notifications').insert({ user_id: newNotification.userId, message: newNotification.message });
+    setNewNotification({ userId: '', message: '' });
+    alert('Notification sent!');
+  };
+
+  // --------------- Offers Logic ---------------
+  const loadOffers = async () => {
+    setLoading(true);
+    const { data } = await supabase.from('recharge_offers').select('*').order('created_at', { ascending: false });
+    if (data) setRechargeOffers(data);
+    setLoading(false);
+  };
+
+  const addOffer = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const { data } = await supabase.from('recharge_offers').insert({
+      operator: newOffer.operator,
+      title: newOffer.title,
+      description: newOffer.description,
+      price: Number(newOffer.price)
+    }).select();
+    if (data && data[0]) {
+      setRechargeOffers([data[0], ...rechargeOffers]);
+      setNewOffer({ operator: 'gp', title: '', description: '', price: '' });
+    }
+  };
+
+  const deleteOffer = async (id: string) => {
+    await supabase.from('recharge_offers').delete().eq('id', id);
+    setRechargeOffers(rechargeOffers.filter(o => o.id !== id));
+  };
 
   // --------------- Gmail Tasks Logic ---------------
   const loadGmailTasks = async () => {
@@ -72,13 +130,19 @@ export function AdminPanel({ onBack }: { onBack: () => void }) {
   };
   
   const handleApproveGmailTask = async (id: string, userId: string, reward: number) => {
-    // Approve task
-    await supabase.from('gmail_tasks').update({ status: 'approved' }).eq('id', id);
-    
-    // Add reward to user
-    const { data: userData } = await supabase.from('users').select('balance').eq('id', userId).single();
-    if (userData) {
-      await supabase.from('users').update({ balance: userData.balance + reward }).eq('id', userId);
+    try {
+      const { error } = await supabase.rpc('approve_gmail_task', {
+        p_task_id: id,
+        p_user_id: userId,
+        p_reward: reward
+      });
+      if (error) {
+        console.error("RPC Error:", error);
+        await supabase.from('gmail_tasks').update({ status: 'approved' }).eq('id', id);
+        alert("SQL function not found. Status updated but balance might not reflect. Update SQL schema.");
+      }
+    } catch (err) {
+      await supabase.from('gmail_tasks').update({ status: 'approved' }).eq('id', id);
     }
     
     setGmailTasks(gmailTasks.map(t => t.id === id ? { ...t, status: 'approved' } : t));
@@ -217,35 +281,53 @@ export function AdminPanel({ onBack }: { onBack: () => void }) {
 
       <div className="max-w-md mx-auto p-4 space-y-6">
         
-        {/* Tabs */}
-        <div className="grid grid-cols-5 gap-1 bg-slate-100 p-1 rounded-2xl mb-4">
+        {/* Tabs - Use horizontal scroll or wrap to fit multiple tabs */}
+        <div className="flex overflow-x-auto gap-1 bg-slate-100 p-1 rounded-2xl mb-4 hide-scrollbar">
           <button 
             onClick={() => setTab('submissions')}
-            className={`py-2 px-1 text-[10px] sm:text-xs font-bold rounded-xl transition-all text-center ${tab === 'submissions' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+            className={`py-2 px-3 text-[10px] sm:text-xs font-bold rounded-xl transition-all text-center whitespace-nowrap min-w-max ${tab === 'submissions' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
           >
             Proofs
           </button>
           <button 
             onClick={() => setTab('recharges')}
-            className={`py-2 px-1 text-[10px] sm:text-xs font-bold rounded-xl transition-all text-center ${tab === 'recharges' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+            className={`py-2 px-3 text-[10px] sm:text-xs font-bold rounded-xl transition-all text-center whitespace-nowrap min-w-max ${tab === 'recharges' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
           >
             Recharges
           </button>
           <button 
+            onClick={() => setTab('offers')}
+            className={`py-2 px-3 text-[10px] sm:text-xs font-bold rounded-xl transition-all text-center whitespace-nowrap min-w-max ${tab === 'offers' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+          >
+            Offers
+          </button>
+          <button 
             onClick={() => setTab('gmail')}
-            className={`py-2 px-1 text-[10px] sm:text-xs font-bold rounded-xl transition-all text-center ${tab === 'gmail' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+            className={`py-2 px-3 text-[10px] sm:text-xs font-bold rounded-xl transition-all text-center whitespace-nowrap min-w-max ${tab === 'gmail' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
           >
             Gmail
           </button>
           <button 
             onClick={() => setTab('tasks')}
-            className={`py-2 px-1 text-[10px] sm:text-xs font-bold rounded-xl transition-all text-center ${tab === 'tasks' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+            className={`py-2 px-3 text-[10px] sm:text-xs font-bold rounded-xl transition-all text-center whitespace-nowrap min-w-max ${tab === 'tasks' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
           >
             Tasks
           </button>
           <button 
+            onClick={() => setTab('notify')}
+            className={`py-2 px-3 text-[10px] sm:text-xs font-bold rounded-xl transition-all text-center whitespace-nowrap min-w-max ${tab === 'notify' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+          >
+            Notify
+          </button>
+          <button 
+            onClick={() => setTab('settings')}
+            className={`py-2 px-3 text-[10px] sm:text-xs font-bold rounded-xl transition-all text-center whitespace-nowrap min-w-max ${tab === 'settings' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+          >
+            Settings
+          </button>
+          <button 
             onClick={() => setTab('keys')}
-            className={`py-2 px-1 text-[10px] sm:text-xs font-bold rounded-xl transition-all text-center ${tab === 'keys' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+            className={`py-2 px-3 text-[10px] sm:text-xs font-bold rounded-xl transition-all text-center whitespace-nowrap min-w-max ${tab === 'keys' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
           >
             Keys
           </button>
@@ -505,6 +587,116 @@ export function AdminPanel({ onBack }: { onBack: () => void }) {
                   </button>
                 </div>
               ))}
+            </div>
+          </div>
+        )}
+
+        {/* Offers Tab */}
+        {tab === 'offers' && (
+          <div className="space-y-6">
+            <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+              <h2 className="text-lg font-bold text-slate-800 mb-4">Add Recharge Offer</h2>
+              <form onSubmit={addOffer} className="space-y-3">
+                <div>
+                  <label className="block text-xs font-medium text-slate-500 mb-1">Operator</label>
+                  <select value={newOffer.operator} onChange={e => setNewOffer({...newOffer, operator: e.target.value})} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm">
+                    <option value="gp">Grameenphone</option>
+                    <option value="robi">Robi</option>
+                    <option value="banglalink">Banglalink</option>
+                    <option value="airtel">Airtel</option>
+                    <option value="teletalk">Teletalk</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-500 mb-1">Title</label>
+                  <input required type="text" value={newOffer.title} onChange={e => setNewOffer({...newOffer, title: e.target.value})} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm" placeholder="e.g. Monthly Data Pack" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-500 mb-1">Description</label>
+                  <input required type="text" value={newOffer.description} onChange={e => setNewOffer({...newOffer, description: e.target.value})} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm" placeholder="e.g. 30GB + 800 Min" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-500 mb-1">Price (৳)</label>
+                  <input required type="number" value={newOffer.price} onChange={e => setNewOffer({...newOffer, price: e.target.value})} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm" />
+                </div>
+                <button type="submit" className="w-full bg-slate-800 text-white py-2.5 rounded-lg flex justify-center items-center gap-2 hover:bg-slate-700">
+                  <Plus size={18} /> Add Offer
+                </button>
+              </form>
+            </div>
+            
+            <div className="space-y-3">
+              <h3 className="font-bold text-slate-800">Existing Offers</h3>
+              {loading ? <p className="text-slate-500">Loading...</p> : rechargeOffers.map(o => (
+                <div key={o.id} className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex justify-between items-center">
+                  <div>
+                    <h4 className="font-bold text-slate-800 text-sm uppercase">{o.operator} - {o.title}</h4>
+                    <p className="text-xs text-slate-500">{o.description} - ৳{o.price}</p>
+                  </div>
+                  <button onClick={() => deleteOffer(o.id)} className="text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition-colors">
+                    <Trash2 size={18} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Notify Tab */}
+        {tab === 'notify' && (
+          <div className="space-y-6">
+            <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+              <h2 className="text-lg font-bold text-slate-800 mb-4">Send Custom Notification</h2>
+              <p className="text-xs text-slate-500 mb-4">You can send an SMS-like notification to their inbox in the app. Enter their exact User ID (Email or Phone not available directly unless searched by ID for now, so use ID or write a broadcast logic).</p>
+              <form onSubmit={sendNotification} className="space-y-3">
+                <div>
+                  <label className="block text-xs font-medium text-slate-500 mb-1">User ID</label>
+                  <input required type="text" value={newNotification.userId} onChange={e => setNewNotification({...newNotification, userId: e.target.value})} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-mono" placeholder="uuid format" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-500 mb-1">Message</label>
+                  <textarea required value={newNotification.message} onChange={e => setNewNotification({...newNotification, message: e.target.value})} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm h-24" placeholder="Hello..." />
+                </div>
+                <button type="submit" className="w-full bg-slate-800 text-white py-2.5 rounded-lg flex justify-center items-center hover:bg-slate-700">
+                  Send Notification
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Settings Tab */}
+        {tab === 'settings' && (
+          <div className="space-y-6">
+            <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+              <h2 className="text-lg font-bold text-slate-800 mb-4">Site Settings (Popup & Links)</h2>
+              {loading ? <p className="text-slate-500">Loading...</p> : settings ? (
+                <form onSubmit={saveSettings} className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <input type="checkbox" checked={settings.popup_enabled} onChange={e => setSettings({...settings, popup_enabled: e.target.checked})} id="popup_enabled" className="w-4 h-4 text-indigo-600 rounded" />
+                    <label htmlFor="popup_enabled" className="text-sm font-bold text-slate-700">Enable Random Welcome Popup (25% chance)</label>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-500 mb-1">Popup Text</label>
+                    <textarea value={settings.popup_text} onChange={e => setSettings({...settings, popup_text: e.target.value})} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm h-20" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-500 mb-1">Tutorial URL</label>
+                    <input type="url" value={settings.tutorial_url} onChange={e => setSettings({...settings, tutorial_url: e.target.value})} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-500 mb-1">Review URL (App/Play Store)</label>
+                    <input type="url" value={settings.review_url} onChange={e => setSettings({...settings, review_url: e.target.value})} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-500 mb-1">Telegram Channel URL</label>
+                    <input type="url" value={settings.telegram_url} onChange={e => setSettings({...settings, telegram_url: e.target.value})} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm" />
+                  </div>
+                  <button type="submit" className="w-full bg-slate-800 text-white py-2.5 rounded-lg flex justify-center items-center hover:bg-slate-700">
+                    Save Config
+                  </button>
+                </form>
+              ) : <p className="text-slate-500">Settings not initialized in DB</p>}
             </div>
           </div>
         )}

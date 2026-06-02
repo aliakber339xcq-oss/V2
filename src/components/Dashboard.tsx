@@ -30,23 +30,48 @@ export function Dashboard({ user, onLogout, setUser }: DashboardProps) {
 
   const [notifications, setNotifications] = useState<any[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [unreadNotifCount, setUnreadNotifCount] = useState(0);
+
+  const [siteSettings, setSiteSettings] = useState<any>(null);
+  const [showPopup, setShowPopup] = useState(false);
 
   const isAdmin = user.gmail === 'admin@gmail.com';
+
+  useEffect(() => {
+    // Check for popup setting once on mount
+    const checkSettings = async () => {
+      const { data } = await supabase.from('site_settings').select('*').limit(1);
+      if (data && data[0]) {
+        setSiteSettings(data[0]);
+        if (data[0].popup_enabled && Math.random() < 0.25) {
+          setShowPopup(true);
+        }
+      }
+    };
+    checkSettings();
+  }, []);
 
   useEffect(() => {
     const fetchNotifications = async () => {
       const { data: subs } = await supabase.from('submissions').select('id, status, tasks(title), updated_at').in('status', ['approved', 'rejected']).eq('user_id', user.id).order('updated_at', { ascending: false }).limit(3);
       const { data: recs } = await supabase.from('recharges').select('id, status, offer_details, updated_at').in('status', ['approved', 'rejected']).eq('user_id', user.id).order('updated_at', { ascending: false }).limit(3);
+      const { data: custom } = await supabase.from('custom_notifications').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
       
       const notifs: any[] = [];
       if (subs) {
-        notifs.push(...subs.map(s => ({ id: `task-${s.id}`, type: 'Task', title: s.tasks?.title || 'Task', status: s.status, updated_at: s.updated_at })));
+        notifs.push(...subs.map(s => ({ id: `task-${s.id}`, type: 'Task', title: s.tasks?.title || 'Task', status: s.status, updated_at: s.updated_at, is_read: true })));
       }
       if (recs) {
-        notifs.push(...recs.map(r => ({ id: `rec-${r.id}`, type: 'Recharge', title: r.offer_details || 'Top Up', status: r.status, updated_at: r.updated_at })));
+        notifs.push(...recs.map(r => ({ id: `rec-${r.id}`, type: 'Recharge', title: r.offer_details || 'Top Up', status: r.status, updated_at: r.updated_at, is_read: true })));
       }
+      if (custom) {
+        notifs.push(...custom.map(c => ({ id: c.id, type: 'Admin Alert', title: c.message, status: 'info', updated_at: c.created_at, is_read: c.is_read })));
+      }
+      
       notifs.sort((a,b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
-      setNotifications(notifs.slice(0, 5));
+      
+      setNotifications(notifs.slice(0, 10));
+      setUnreadNotifCount(notifs.filter(n => !n.is_read).length);
     };
     fetchNotifications();
 
@@ -171,6 +196,15 @@ export function Dashboard({ user, onLogout, setUser }: DashboardProps) {
     setActiveTaskTitle(taskTitle);
   };
 
+  const handleOpenNotifications = async () => {
+    setShowNotifications(true);
+    if (unreadNotifCount > 0) {
+      await supabase.from('custom_notifications').update({ is_read: true }).eq('user_id', user.id).eq('is_read', false);
+      setUnreadNotifCount(0);
+      setNotifications(notifications.map(n => ({ ...n, is_read: true })));
+    }
+  };
+
   const premiumTask = TASK_LIST.find(t => t.id === 'premium');
   const rechargeTask = TASK_LIST.find(t => t.id === 'recharge');
   const regularTasks = TASK_LIST.filter(t => t.id !== 'premium' && t.id !== 'recharge');
@@ -197,6 +231,57 @@ export function Dashboard({ user, onLogout, setUser }: DashboardProps) {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
+      {/* Welcome Popup */}
+      <AnimatePresence>
+        {showPopup && siteSettings && (
+          <>
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+              onClick={() => setShowPopup(false)}
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl relative"
+                onClick={e => e.stopPropagation()}
+              >
+                <button onClick={() => setShowPopup(false)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 bg-slate-100 p-1.5 rounded-full">
+                  <X size={20} />
+                </button>
+                <div className="w-16 h-16 bg-indigo-50 text-indigo-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <Star size={32} />
+                </div>
+                <h2 className="text-xl font-bold text-center text-slate-800 mb-2">Welcome Active User!</h2>
+                <div className="text-sm text-slate-600 text-center mb-6 whitespace-pre-wrap">
+                  {siteSettings.popup_text || "Thank you for using BDPay."}
+                </div>
+                <div className="space-y-3">
+                  {siteSettings.tutorial_url && (
+                     <a href={siteSettings.tutorial_url} target="_blank" rel="noopener noreferrer" className="w-full bg-slate-100 text-slate-700 py-3 rounded-xl font-bold flex justify-center items-center gap-2 hover:bg-slate-200 transition-colors">
+                       Video Tutorial <ChevronRight size={18} />
+                     </a>
+                  )}
+                  {siteSettings.review_url && (
+                     <a href={siteSettings.review_url} target="_blank" rel="noopener noreferrer" className="w-full bg-emerald-50 text-emerald-600 py-3 rounded-xl font-bold flex justify-center items-center gap-2 hover:bg-emerald-100 transition-colors">
+                       Review App (5★) <ChevronRight size={18} />
+                     </a>
+                  )}
+                  {siteSettings.telegram_url && (
+                     <a href={siteSettings.telegram_url} target="_blank" rel="noopener noreferrer" className="w-full bg-[#2AABEE]/10 text-[#2AABEE] py-3 rounded-xl font-bold flex justify-center items-center gap-2 hover:bg-[#2AABEE]/20 transition-colors">
+                       Join Telegram Channel
+                     </a>
+                  )}
+                </div>
+              </motion.div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
       {/* Notifications Modal */}
       <AnimatePresence>
         {showNotifications && (
@@ -328,11 +413,11 @@ export function Dashboard({ user, onLogout, setUser }: DashboardProps) {
         </div>
         <div className="flex items-center gap-2">
           <button 
-            onClick={() => setShowNotifications(true)}
+            onClick={handleOpenNotifications}
             className="p-2 hover:bg-black/10 rounded-lg transition-colors relative"
           >
             <Bell size={22} />
-            {notifications.length > 0 && <span className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full border border-primary"></span>}
+            {unreadNotifCount > 0 && <span className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full border border-primary"></span>}
           </button>
           <button 
             onClick={() => setIsMenuOpen(true)}
@@ -602,7 +687,7 @@ export function Dashboard({ user, onLogout, setUser }: DashboardProps) {
       </div>
 
       {/* Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-slate-100 shadow-[0_-5px_20px_rgba(0,0,0,0.03)] pb-safe">
+      <div className="fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-slate-100 shadow-[0_-5px_20px_rgba(0,0,0,0.03)] pb-2 sm:pb-4">
         <div className="max-w-md mx-auto">
           <div className="flex justify-around items-center px-2 py-2">
             <button 
