@@ -1,0 +1,8 @@
+{
+  "name": "BDPAY",
+  "description": "Earning web application with daily check-ins, tasks, and single-device restrictions.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
