@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-const LAUNCH_DATE = new Date('2024-03-27T00:00:00Z');
+const LAUNCH_DATE = new Date('2026-02-02T00:00:00Z');
 
 export function SiteAgeCounter() {
   const [age, setAge] = useState({ months: 0, days: 0, hours: 0, minutes: 0, seconds: 0 });

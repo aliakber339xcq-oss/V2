@@ -87,29 +87,31 @@ export function ReferralView({ user, onBack }: { user: User, onBack: () => void 
   return (
     <motion.div 
       initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-      className="fixed inset-0 bg-slate-50 z-50 overflow-y-auto pb-safe"
+      className="fixed inset-0 bg-[#FAFAFA] z-50 overflow-y-auto pb-safe"
     >
-      <div className="bg-indigo-600 rounded-b-[2rem] pt-safe px-5 pb-10 shadow-lg text-white sticky top-0 z-10 w-full max-w-md mx-auto">
+      <div className="bg-gradient-to-br from-indigo-700 to-indigo-900 rounded-b-[2.5rem] pt-safe px-5 pb-12 shadow-[0_10px_30px_rgba(79,70,229,0.3)] text-white sticky top-0 z-10 w-full max-w-md mx-auto">
         <div className="flex items-center gap-4 py-4">
-          <button onClick={onBack} className="p-2 hover:bg-white/10 rounded-full transition-colors">
+          <button onClick={onBack} className="p-2 hover:bg-white/20 bg-white/10 rounded-full transition-colors backdrop-blur-sm">
             <ArrowLeft size={24} />
           </button>
-          <h1 className="text-xl font-bold">রেফার করুন ও আয় করুন</h1>
+          <h1 className="text-xl font-bold tracking-wide">রেফার করুন ও আয় করুন</h1>
         </div>
         
         <div className="mt-4 text-center">
-           <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-3 backdrop-blur-sm">
-             <Gift size={32} />
+           <div className="w-20 h-20 bg-white/10 rounded-3xl flex items-center justify-center mx-auto mb-4 backdrop-blur-md shadow-inner border border-white/20">
+             <Gift size={40} className="text-amber-300" />
            </div>
-           <h2 className="text-3xl font-black mb-1">৳১৫ <span className="text-lg font-medium text-indigo-200">প্রতি রেফারে</span></h2>
-           <p className="text-indigo-100 text-sm">আপনার কোড শেয়ার করুন এবং বন্ধুদের জয়েন করিয়ে বোনাস পান!</p>
+           <h2 className="text-4xl font-black mb-2 flex justify-center items-center gap-2">
+             ৳১৫ <span className="text-lg font-bold text-indigo-200 uppercase tracking-widest bg-white/10 px-3 py-1 rounded-xl">প্রতি রেফারে</span>
+           </h2>
+           <p className="text-indigo-100/80 text-sm font-medium mt-3 px-4 leading-relaxed">আপনার কোড শেয়ার করুন এবং বন্ধুদের জয়েন করিয়ে লাইফটাইম বোনাস পান!</p>
         </div>
       </div>
 
-      <div className="max-w-md mx-auto px-4 -mt-6">
+      <div className="max-w-md mx-auto px-4 -mt-8 relative z-20 space-y-5">
         
-        <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 mb-6 relative">
-          <h3 className="font-bold text-slate-800 mb-3 flex items-center gap-2"><Users size={18} className="text-indigo-500" /> আপনার রেফারেল কোড</h3>
+        <div className="bg-white rounded-3xl p-6 shadow-xl shadow-slate-200/50 border border-slate-100 relative">
+          <h3 className="font-black text-slate-800 mb-4 flex items-center gap-2 text-sm uppercase tracking-wide"><Users size={18} className="text-indigo-500" /> আপনার রেফারেল অ্যাক্সেস</h3>
           {loading ? (
             <div className="h-12 bg-slate-100 rounded-xl animate-pulse mb-3"></div>
           ) : (
@@ -136,8 +138,16 @@ export function ReferralView({ user, onBack }: { user: User, onBack: () => void 
         </div>
 
         <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 mb-6">
-          <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2"><Medal size={18} className="text-indigo-500" /> টার্গেট বোনাস</h3>
-          <p className="text-xs text-slate-500 mb-4">আপনি ইতিমধ্যে <span className="font-bold text-indigo-600">{totalRefs}</span> জনকে ইনভাইট করেছেন।</p>
+          <h3 className="font-black text-slate-800 mb-5 flex items-center gap-2 text-sm uppercase tracking-wide"><Medal size={20} className="text-indigo-500" /> টার্গেট রিওয়ার্ডস</h3>
+          <div className="bg-rose-50 border border-rose-100 p-3 rounded-xl mb-5 flex items-center gap-3">
+             <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm shrink-0">
+               <span className="text-rose-600 font-bold text-lg">{totalRefs}</span>
+             </div>
+             <div>
+               <p className="text-xs font-bold text-slate-600">আপনার মোট ইনভাইট</p>
+               <p className="text-[10px] text-slate-500 mt-0.5">টার্গেট পূরণ করে এক্সট্রা বোনাস নিন</p>
+             </div>
+          </div>
           
           <div className="space-y-4">
             <MilestoneCard milestone={25} bonus={100} current={totalRefs} claimed={claimedBonuses.includes('25')} onClaim={() => claimBonus(25, 100)} />
@@ -146,42 +156,64 @@ export function ReferralView({ user, onBack }: { user: User, onBack: () => void 
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 mb-6">
-           <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2"><Activity size={18} className="text-indigo-500" /> রিসেন্ট ইনভাইট</h3>
+        <div className="bg-white rounded-3xl p-6 shadow-xl shadow-slate-200/50 border border-slate-100">
+           <h3 className="font-black text-slate-800 mb-5 flex items-center gap-2 text-sm uppercase tracking-wide"><Activity size={20} className="text-indigo-500" /> রিসেন্ট ইনভাইট</h3>
            {loading ? (
-             <p className="text-slate-500 text-sm">লোড হচ্ছে...</p>
+             <div className="animate-pulse space-y-3">
+                <div className="h-10 bg-slate-100 rounded-xl"></div>
+                <div className="h-10 bg-slate-100 rounded-xl"></div>
+             </div>
            ) : history.length === 0 ? (
-             <p className="text-slate-500 text-sm italic text-center py-4 bg-slate-50 rounded-xl">এখনও কাউকে ইনভাইট করেননি।</p>
+             <div className="flex flex-col items-center justify-center py-6 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+               <span className="bg-white p-3 rounded-full mb-2 shadow-sm"><Users size={20} className="text-slate-400" /></span>
+               <p className="text-slate-500 text-xs font-bold uppercase tracking-wider">Empty History</p>
+             </div>
            ) : (
              <div className="space-y-3">
                {history.slice(0, 5).map((h, i) => (
-                 <div key={i} className="flex justify-between items-center border-b border-slate-100 pb-3 last:border-0 last:pb-0">
-                   <div>
-                     <div className="font-bold text-sm text-slate-800">{h.referred_name || 'Unknown User'}</div>
-                     <div className="text-xs text-slate-400">{new Date(h.created_at).toLocaleDateString()}</div>
+                 <div key={i} className="flex justify-between items-center bg-slate-50 p-3 rounded-xl border border-slate-100">
+                   <div className="flex items-center gap-3">
+                     <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center font-black text-lg text-slate-400 shadow-sm">
+                       {h.referred_name.charAt(0).toUpperCase()}
+                     </div>
+                     <div>
+                       <div className="font-bold text-sm text-slate-800">{h.referred_name || 'Unknown User'}</div>
+                       <div className="text-[10px] text-slate-400 font-medium">{new Date(h.created_at).toLocaleDateString()}</div>
+                     </div>
                    </div>
-                   <div className="font-bold text-emerald-600 text-sm">+৳{h.reward_amount}</div>
+                   <div className="font-black text-emerald-600 bg-emerald-100 px-3 py-1.5 rounded-lg text-sm">+৳{h.reward_amount}</div>
                  </div>
                ))}
              </div>
            )}
         </div>
 
-        <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 mb-10">
-           <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2"><Trophy size={18} className="text-amber-500" /> লিডারবোর্ড</h3>
+        <div className="bg-white rounded-3xl p-6 shadow-xl shadow-slate-200/50 border border-slate-100 mb-10">
+           <h3 className="font-black text-slate-800 mb-5 flex items-center gap-2 text-sm uppercase tracking-wide"><Trophy size={20} className="text-amber-500" /> লিডারবোর্ড</h3>
            {loading ? (
-             <p className="text-slate-500 text-sm">লোড হচ্ছে...</p>
+             <div className="animate-pulse space-y-3">
+                <div className="h-12 bg-slate-100 rounded-xl"></div>
+                <div className="h-12 bg-slate-100 rounded-xl"></div>
+             </div>
            ) : leaderboard.length === 0 ? (
              <p className="text-slate-500 text-sm">কোনো ডেটা নেই।</p>
            ) : (
-             <div className="space-y-4">
+             <div className="space-y-3">
                {leaderboard.map((leader, i) => (
-                 <div key={i} className="flex items-center gap-3">
-                   <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${i === 0 ? 'bg-amber-100 text-amber-600' : i === 1 ? 'bg-slate-200 text-slate-600' : i === 2 ? 'bg-amber-50/50 text-amber-800' : 'bg-slate-100 text-slate-500'}`}>
-                     {i + 1}
+                 <div key={i} className="flex items-center gap-4 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                   <div className={`w-10 h-10 rounded-full flex items-center justify-center font-black shadow-inner border-2 border-white ${
+                     i === 0 ? 'bg-gradient-to-br from-amber-300 to-amber-500 text-white shadow-amber-200' : 
+                     i === 1 ? 'bg-gradient-to-br from-slate-300 to-slate-400 text-white shadow-slate-200' : 
+                     i === 2 ? 'bg-gradient-to-br from-orange-300 to-orange-400 text-white shadow-orange-200' : 
+                     'bg-white text-slate-500'
+                   }`}>
+                     {i === 0 && <Trophy size={14} className="mb-0.5" />}
+                     {i !== 0 && (i + 1)}
                    </div>
                    <div className="flex-1 font-bold text-sm text-slate-700">{leader.name}</div>
-                   <div className="text-xs font-black text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md">{leader.total_referrals} রেফার</div>
+                   <div className="text-[11px] font-black tracking-widest text-indigo-600 bg-indigo-100 px-3 py-1.5 rounded-lg shadow-sm border border-indigo-50">
+                     {leader.total_referrals} REFER
+                   </div>
                  </div>
                ))}
              </div>
@@ -206,24 +238,27 @@ function MilestoneCard({ milestone, bonus, current, claimed, onClaim }: { milest
   }, [percent]);
 
   return (
-    <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 relative overflow-hidden">
-      <div className="flex justify-between items-end mb-2 relative z-10">
+    <div className="bg-[#fafafa] rounded-2xl p-4 border border-slate-200 relative overflow-hidden shadow-inner mb-4 last:mb-0">
+      <div className="flex justify-between items-end mb-3 relative z-10">
         <div>
-          <div className="font-bold text-sm text-slate-700">{milestone} রেফারেলস</div>
-          <div className="text-xs text-slate-500 font-medium">এক্সট্রা বোনাস: <span className="text-emerald-600 font-bold">৳{bonus}</span></div>
+          <div className="font-black text-slate-800 text-lg">{milestone} <span className="text-xs text-slate-500 font-bold uppercase tracking-wider">রেফারেলস</span></div>
+          <div className="text-xs text-slate-500 font-medium mt-1">এক্সট্রা বোনাস: <span className="text-emerald-600 font-black">৳{bonus}</span></div>
         </div>
         <div>
           {claimed ? (
-            <span className="text-[10px] font-bold text-indigo-600 bg-indigo-100 px-2 py-1 rounded-lg">কালেক্টেড</span>
+            <span className="text-[10px] font-black text-white bg-indigo-500 px-3 py-1.5 rounded-xl uppercase tracking-widest shadow-[0_2px_10px_rgba(99,102,241,0.4)]">কালেক্টেড</span>
           ) : isComplete ? (
-            <button onClick={onClaim} className="text-[10px] font-bold text-white bg-emerald-500 hover:bg-emerald-600 px-3 py-1 rounded-lg shadow-sm transition-colors uppercase tracking-widest">কালেক্ট</button>
+            <button onClick={onClaim} className="text-[10px] font-black text-white bg-emerald-500 hover:scale-105 active:scale-95 px-4 py-1.5 rounded-xl shadow-[0_4px_15px_rgba(16,185,129,0.4)] transition-all uppercase tracking-widest">কালেক্ট</button>
           ) : (
-            <span className="text-xs font-bold text-slate-400">{current}/{milestone}</span>
+            <div className="text-center bg-white px-3 py-1 rounded-lg border border-slate-100 shadow-sm">
+               <span className="text-xs font-black text-slate-700">{current}</span>
+               <span className="text-[10px] font-bold text-slate-400">/{milestone}</span>
+            </div>
           )}
         </div>
       </div>
-      <div className="h-2 w-full bg-slate-200 rounded-full overflow-hidden relative z-10">
-        <div className={`h-full transition-all duration-1000 ease-out ${isComplete ? 'bg-emerald-500' : 'bg-indigo-500'}`} style={{ width: `${animatedPercent}%` }}></div>
+      <div className="h-3 w-full bg-slate-200 rounded-full overflow-hidden relative z-10 shadow-inner">
+        <div className={`h-full transition-all duration-1000 ease-out shadow-inner ${isComplete ? 'bg-gradient-to-r from-emerald-400 to-emerald-500' : 'bg-gradient-to-r from-indigo-400 to-indigo-500'}`} style={{ width: `${animatedPercent}%` }}></div>
       </div>
     </div>
   );

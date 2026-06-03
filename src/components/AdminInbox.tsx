@@ -39,7 +39,7 @@ export function AdminInbox() {
        const map = new Map();
        for (const chat of allChats) {
          if (!map.has(chat.user_id)) {
-           const profile = userMap.get(chat.user_id) || {};
+           const profile = userMap.get(chat.user_id) || {} as any;
            map.set(chat.user_id, {
              user_id: chat.user_id,
              last_message: chat.text,

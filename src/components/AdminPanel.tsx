@@ -218,13 +218,15 @@ export function AdminPanel({ onBack }: { onBack: () => void }) {
     setLoading(false);
   };
 
-  const handleRechargeAction = async (id: string, action: 'approved' | 'rejected', amount: number, userId: string) => {
-    // If approved, we need to deduct the balance or do whatever.
-    // Actually wait, for recharge, user pays us on bKash directly, so their balance in app is unaffected.
-    // Or do they use their app balance? "Recivee Number,  Oparetor, Amount Diye contiune, Then Paynent kore TRx ID dibe then" - if they pay on bKash, their app balance isn't deducted.
-    // So we just update the status!
-    await supabase.from('recharges').update({ status: action }).eq('id', id);
-    setRecharges(recharges.filter(r => r.id !== id));
+  const handleRechargeAction = async (rec: any, action: 'approved' | 'rejected') => {
+    await supabase.from('recharges').update({ status: action }).eq('id', rec.id);
+    
+    // If it's a BD Pro Lifetime Access recharge, update user_profiles
+    if (action === 'approved' && rec.offer_details === 'BD Pro Lifetime Access') {
+      await supabase.from('user_profiles').update({ is_pro: true }).eq('user_id', rec.user_id);
+    }
+    
+    setRecharges(recharges.filter(r => r.id !== rec.id));
   };
 
   // --------------- Submissions Logic ---------------
@@ -520,13 +522,13 @@ export function AdminPanel({ onBack }: { onBack: () => void }) {
 
                 <div className="flex gap-2 pt-2">
                   <button 
-                    onClick={() => handleRechargeAction(rec.id, 'approved', rec.amount, rec.user_id)}
+                    onClick={() => handleRechargeAction(rec, 'approved')}
                     className="flex-1 bg-emerald-100 text-emerald-700 py-2.5 rounded-lg flex items-center justify-center gap-2 hover:bg-emerald-200 font-bold transition-colors"
                   >
                     <Check size={18} /> Approve
                   </button>
                   <button 
-                    onClick={() => handleRechargeAction(rec.id, 'rejected', rec.amount, rec.user_id)}
+                    onClick={() => handleRechargeAction(rec, 'rejected')}
                     className="flex-1 bg-red-100 text-red-700 py-2.5 rounded-lg flex items-center justify-center gap-2 hover:bg-red-200 font-bold transition-colors"
                   >
                     <X size={18} /> Reject

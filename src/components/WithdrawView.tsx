@@ -3,6 +3,7 @@ import { User } from '../types';
 import { Coins, AlertCircle, CheckCircle2, Wallet, ArrowRight } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { motion } from 'motion/react';
+import toast from 'react-hot-toast';
 
 export function WithdrawView({ user, totalReferrals, onWithdraw }: { user: User, totalReferrals: number, onWithdraw: () => void }) {
   const [method, setMethod] = useState<'bkash' | 'nagad' | 'rocket'>('bkash');
@@ -12,7 +13,8 @@ export function WithdrawView({ user, totalReferrals, onWithdraw }: { user: User,
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
 
-  const canWithdraw = user.balance >= 300 && totalReferrals >= 4;
+  const minWithdrawAmount = user.isPro ? 20 : 300;
+  const canWithdraw = user.isPro ? (user.balance >= minWithdrawAmount) : (user.balance >= minWithdrawAmount && totalReferrals >= 4);
 
   const handleWithdraw = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,8 +26,8 @@ export function WithdrawView({ user, totalReferrals, onWithdraw }: { user: User,
       return;
     }
     
-    if (numAmount < 300) {
-      setError('সর্বনিম্ন ৩০০ টাকা উত্তোলন করা যাবে।');
+    if (numAmount < minWithdrawAmount) {
+      setError(`সর্বনিম্ন ${minWithdrawAmount} টাকা উত্তোলন করা যাবে।`);
       return;
     }
     
@@ -49,6 +51,7 @@ export function WithdrawView({ user, totalReferrals, onWithdraw }: { user: User,
       if (withdrawError) throw withdrawError;
 
       setSuccess(true);
+      toast.success('Withdrawal request submitted successfully!', { icon: '💸' });
       setTimeout(() => {
         onWithdraw();
       }, 2000);
@@ -86,13 +89,21 @@ export function WithdrawView({ user, totalReferrals, onWithdraw }: { user: User,
         <h3 className="font-bold text-slate-800 mb-2 relative z-10">উত্তোলনের নিয়মাবলী</h3>
         <ul className="text-sm text-slate-600 space-y-2 mb-2 font-medium relative z-10">
            <li className="flex items-center gap-2">
-             <div className={`w-1.5 h-1.5 rounded-full ${user.balance >= 300 ? 'bg-emerald-500' : 'bg-slate-300'}`}></div>
-             সর্বনিম্ন <strong className="text-slate-800">৩০০ টাকা</strong> হতে হবে।
+             <div className={`w-1.5 h-1.5 rounded-full ${user.balance >= minWithdrawAmount ? 'bg-emerald-500' : 'bg-slate-300'}`}></div>
+             সর্বনিম্ন <strong className="text-slate-800">{minWithdrawAmount} টাকা</strong> হতে হবে। {user.isPro && <span className="bg-amber-100 text-amber-600 text-[10px] px-2 py-0.5 rounded ml-1 uppercase font-bold">Pro</span>}
            </li>
-           <li className="flex items-center gap-2">
-             <div className={`w-1.5 h-1.5 rounded-full ${totalReferrals >= 4 ? 'bg-emerald-500' : 'bg-slate-300'}`}></div>
-             অন্তত <strong className="text-slate-800">৪ জন অ্যাক্টিভ রেফারেল</strong> থাকতে হবে (আপনার আছে {totalReferrals} জন)।
-           </li>
+           {!user.isPro && (
+             <li className="flex items-center gap-2">
+               <div className={`w-1.5 h-1.5 rounded-full ${totalReferrals >= 4 ? 'bg-emerald-500' : 'bg-slate-300'}`}></div>
+               অন্তত <strong className="text-slate-800">৪ জন অ্যাক্টিভ রেফারেল</strong> থাকতে হবে (আপনার আছে {totalReferrals} জন)।
+             </li>
+           )}
+           {user.isPro && (
+             <li className="flex items-center gap-2 text-amber-600 font-bold">
+               <CheckCircle2 size={14} className="text-amber-500" />
+               BD Pro ইউজারদের জন্য কোনো রেফারেল প্রয়োজন নেই!
+             </li>
+           )}
         </ul>
       </div>
 
@@ -155,11 +166,11 @@ export function WithdrawView({ user, totalReferrals, onWithdraw }: { user: User,
                 <input
                   type="number"
                   required
-                  min="300"
+                  min={minWithdrawAmount}
                   max={user.balance}
                   value={amount}
                   onChange={e => setAmount(e.target.value)}
-                  placeholder="300"
+                  placeholder={minWithdrawAmount.toString()}
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-black text-indigo-700"
                 />
               </div>

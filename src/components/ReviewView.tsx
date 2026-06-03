@@ -152,36 +152,45 @@ export function ReviewView({ user }: { user: User }) {
             <p className="font-medium text-sm">কোনো রিভিউ নেই</p>
           </div>
         ) : (
-          reviews.map(review => (
-            <div key={review.id} className="bg-white rounded-3xl shadow-sm p-5 border border-slate-100">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center font-black text-lg uppercase">
+          reviews.map((review, i) => (
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }} 
+              animate={{ opacity: 1, y: 0 }} 
+              transition={{ delay: i * 0.05 }}
+              key={review.id} 
+              className="bg-white rounded-3xl shadow-xl shadow-slate-200/40 p-6 border border-slate-100 relative overflow-hidden"
+            >
+              <div className="absolute top-0 right-0 w-24 h-24 bg-amber-50 rounded-bl-full -mr-4 -mt-4 z-0"></div>
+              
+              <div className="relative z-10 flex items-center justify-between mb-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-indigo-50 to-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center font-black text-xl uppercase shadow-inner border border-indigo-200/50">
                     {review.reviewer_name.charAt(0)}
                   </div>
                   <div>
-                    <h4 className="font-bold text-sm text-slate-800 flex items-center gap-1.5">
+                    <h4 className="font-bold text-[15px] text-slate-800 tracking-wide">
                       {review.reviewer_name}
-                      {review.is_admin && <span className="bg-indigo-500 text-white text-[9px] px-1.5 py-0.5 rounded-md uppercase tracking-widest font-black">Admin</span>}
                     </h4>
-                    <p className="text-[11px] font-medium text-slate-400">{new Date(review.created_at).toLocaleDateString()}</p>
+                    <p className="text-[11px] font-bold tracking-wider text-slate-400 mt-0.5 uppercase">{new Date(review.created_at).toLocaleDateString()}</p>
                   </div>
                 </div>
-                <div className="flex gap-0.5">
-                  {[1,2,3,4,5].map(star => <Star key={star} size={12} className="text-amber-400 fill-amber-400" />)}
+                <div className="flex gap-1 bg-amber-50 px-2.5 py-1.5 rounded-xl border border-amber-100/50">
+                  {[1,2,3,4,5].map(star => <Star key={star} size={14} className="text-amber-400 fill-amber-400" />)}
                 </div>
               </div>
               
               {review.text && (
-                <p className="text-sm text-slate-700 mb-3 leading-relaxed">{review.text}</p>
+                <div className="relative z-10 bg-slate-50 border border-slate-100 rounded-2xl p-4 mb-4">
+                  <p className="text-sm text-slate-700 leading-relaxed font-medium">{review.text}</p>
+                </div>
               )}
               
               {review.image_url && (
-                <div className="rounded-2xl overflow-hidden border border-slate-100 bg-slate-50">
-                  <img src={review.image_url} alt="Review attachment" className="w-full h-auto object-cover max-h-60" />
+                <div className="relative z-10 rounded-2xl overflow-hidden shadow-sm border border-slate-200/60 bg-black/5">
+                  <img src={review.image_url} alt="Review attachment" className="w-full h-auto object-cover max-h-[250px]" loading="lazy" />
                 </div>
               )}
-            </div>
+            </motion.div>
           ))
         )}
       </div>

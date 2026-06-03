@@ -16,10 +16,33 @@ export function SupportWidget({ user }: { user: User }) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const handlePopState = () => {
+      const path = window.location.pathname.replace('/', '');
+      if (path === 'chat') {
+        setIsOpen(true);
+        setTab('messages');
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    if (window.location.pathname === '/chat') {
+      setIsOpen(true);
+      setTab('messages');
+    }
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  useEffect(() => {
     if (isOpen) {
+      if (window.location.pathname !== '/chat') {
+        window.history.pushState(null, '', '/chat');
+      }
       loadMessages();
       loadUpdates();
       loadReviews();
+    } else {
+      if (window.location.pathname === '/chat') {
+        window.history.pushState(null, '', '/home');
+      }
     }
   }, [isOpen]);
 
@@ -40,7 +63,11 @@ export function SupportWidget({ user }: { user: User }) {
   };
 
   const loadReviews = async () => {
-    const { data } = await supabase.from('reviews').select('*').order('created_at', { ascending: false }).limit(2);
+    let query = supabase.from('reviews').select('*').order('created_at', { ascending: false });
+    if (user.gmail !== 'admin@gmail.com') {
+      query = query.or(`is_admin.eq.true,user_id.eq.${user.id}`);
+    }
+    const { data } = await query.limit(2);
     if (data) setReviews(data);
   };
 
@@ -173,9 +200,9 @@ export function SupportWidget({ user }: { user: User }) {
                      </div>
                      <div>
                          <h3 className="font-bold text-slate-800">Support Team</h3>
-                         <p className="text-[11px] text-emerald-600 font-bold flex items-center gap-1">
+                         <div className="text-[11px] text-emerald-600 font-bold flex items-center gap-1">
                              <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></div> Typically replies in a few minutes
-                         </p>
+                         </div>
                      </div>
                  </div>
               )}
@@ -237,7 +264,6 @@ export function SupportWidget({ user }: { user: User }) {
                            <div key={review.id} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
                              <div className="flex items-center gap-2 mb-2">
                                 <span className="font-bold text-xs text-slate-800">{review.reviewer_name}</span>
-                                {review.is_admin && <span className="bg-indigo-500 text-white text-[9px] px-1.5 py-0.5 rounded-md uppercase font-black">Admin</span>}
                              </div>
                              {review.image_url && (
                                 <img src={review.image_url} className="w-full h-24 object-cover rounded-xl mb-2" alt="review" />

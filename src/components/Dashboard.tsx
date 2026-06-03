@@ -1,7 +1,7 @@
 import { User } from '../types';
 import { TASK_LIST } from '../data';
 import { motion, AnimatePresence } from 'motion/react';
-import { LogOut, Wallet, Flame, CheckCircle2, ChevronRight, Menu, Home, Clock, Coins, User as UserIcon, ShieldAlert, X, HelpCircle, Info, Star, Bell, Gift, Send } from 'lucide-react';
+import { LogOut, Wallet, Flame, CheckCircle2, ChevronRight, Menu, Home, Clock, Coins, User as UserIcon, ShieldAlert, X, HelpCircle, Info, Star, Bell, Gift, Send, Crown } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { TaskListView } from './TaskListView';
@@ -15,6 +15,7 @@ import { WithdrawView } from './WithdrawView';
 import { ReviewView } from './ReviewView';
 import { UpdatesView } from './UpdatesView';
 import { SupportWidget } from './SupportWidget';
+import { BDProView } from './BDProView';
 
 interface DashboardProps {
   user: User;
@@ -26,7 +27,30 @@ export function Dashboard({ user, onLogout, setUser }: DashboardProps) {
   const [canCheckIn, setCanCheckIn] = useState(true);
   const [checkInMsg, setCheckInMsg] = useState('');
   const [isUpdating, setIsUpdating] = useState(false);
-  const [activeTab, setActiveTab] = useState<'home' | 'history' | 'withdraw' | 'account' | 'admin'>('home');
+  const [activeTab, setActiveTab] = useState<'home' | 'history' | 'withdraw' | 'reviews' | 'account' | 'admin' | 'updates' | 'bdpro'>(() => {
+    const path = window.location.pathname.replace('/', '');
+    return ['home', 'history', 'withdraw', 'reviews', 'account', 'admin', 'updates', 'bdpro'].includes(path) ? (path as any) : 'home';
+  });
+
+  useEffect(() => {
+    const currentPath = `/${activeTab}`;
+    if (window.location.pathname !== currentPath) {
+      window.history.pushState(null, '', currentPath);
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    const handlePopState = () => {
+      const path = window.location.pathname.replace('/', '');
+      if (['home', 'history', 'withdraw', 'reviews', 'account', 'admin', 'updates', 'bdpro'].includes(path)) {
+        setActiveTab(path as any);
+      } else if (path === '') {
+        setActiveTab('home');
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeTaskCategory, setActiveTaskCategory] = useState<string | null>(null);
   const [activeTaskTitle, setActiveTaskTitle] = useState('');
@@ -96,9 +120,11 @@ export function Dashboard({ user, onLogout, setUser }: DashboardProps) {
         await supabase.rpc('ensure_user_profile', { p_ref_code: user.referralCode || null });
 
         // Fetch actual stats
-        const { data: profile } = await supabase.from('user_profiles').select('total_referrals').eq('user_id', user.id).single();
+        const { data: profile } = await supabase.from('user_profiles').select('total_referrals, is_pro').eq('user_id', user.id).single();
+        let isProFlag = false;
         if (profile) {
           setTotalReferrals(profile.total_referrals || 0);
+          isProFlag = !!profile.is_pro;
         }
 
         const { data } = await supabase.auth.getUser();
@@ -110,9 +136,10 @@ export function Dashboard({ user, onLogout, setUser }: DashboardProps) {
             balance: metadata.balance ?? user.balance,
             streak: metadata.streak ?? user.streak,
             lastCheckIn: metadata.lastCheckIn ?? user.lastCheckIn,
+            isPro: isProFlag,
           };
           // Update local state if there are changes
-          if (updatedUser.balance !== user.balance || updatedUser.streak !== user.streak || updatedUser.lastCheckIn !== user.lastCheckIn) {
+          if (updatedUser.balance !== user.balance || updatedUser.streak !== user.streak || updatedUser.lastCheckIn !== user.lastCheckIn || updatedUser.isPro !== user.isPro) {
              setUser(updatedUser);
              localStorage.setItem('bdpay_user', JSON.stringify(updatedUser));
              localStorage.setItem('bdpay_registered_user_data', JSON.stringify(updatedUser));
@@ -212,6 +239,10 @@ export function Dashboard({ user, onLogout, setUser }: DashboardProps) {
       setIsRecharging(true);
       return;
     }
+    if (taskId === 'premium' && !user.isPro) {
+      setActiveTab('bdpro');
+      return;
+    }
     if (taskId === 'gmail') {
       setIsGmailView(true);
       return;
@@ -262,7 +293,7 @@ export function Dashboard({ user, onLogout, setUser }: DashboardProps) {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
+    <div className="min-h-screen bg-[#FAFAFA] flex flex-col">
       {/* Welcome Popup */}
       <AnimatePresence>
         {showPopup && siteSettings && (
@@ -420,6 +451,9 @@ export function Dashboard({ user, onLogout, setUser }: DashboardProps) {
                 <button onClick={() => { setActiveTab('updates'); setIsMenuOpen(false); }} className={`w-full flex items-center gap-3 p-3 rounded-xl font-medium transition-colors ${activeTab === 'updates' ? 'bg-primary/10 text-primary' : 'text-slate-700 hover:bg-slate-50'}`}>
                   <Bell size={20} className={activeTab === 'updates' ? 'text-primary' : 'text-slate-400'} /> Updates
                 </button>
+                <button onClick={() => { setActiveTab('bdpro'); setIsMenuOpen(false); }} className={`w-full flex items-center gap-3 p-3 rounded-xl font-medium transition-colors ${activeTab === 'bdpro' ? 'bg-amber-100 text-amber-600' : 'text-slate-700 hover:bg-slate-50'}`}>
+                  <Crown size={20} className={activeTab === 'bdpro' ? 'text-amber-500' : 'text-slate-400'} /> BD Pro
+                </button>
                 
                 <hr className="my-4 border-slate-100" />
                 
@@ -450,6 +484,21 @@ export function Dashboard({ user, onLogout, setUser }: DashboardProps) {
           <h1 className="text-xl font-extrabold tracking-tight">BDPAY</h1>
         </div>
         <div className="flex items-center gap-2">
+          {!user.isPro && (
+            <button 
+              onClick={() => setActiveTab('bdpro')}
+              className="p-1 px-3 bg-gradient-to-r from-amber-400 to-amber-500 rounded-full flex items-center gap-1.5 shadow-md border border-amber-300 hover:scale-105 active:scale-95 transition-all"
+            >
+              <Crown size={14} className="text-white fill-white" />
+              <span className="text-xs font-black text-white">PRO</span>
+            </button>
+          )}
+          {user.isPro && (
+            <div className="p-1 px-2.5 bg-gradient-to-r from-slate-800 to-slate-900 rounded-lg flex items-center gap-1 shadow-inner border border-white/10 mr-1">
+              <Crown size={14} className="text-amber-400 fill-amber-400" />
+              <span className="text-[10px] font-black tracking-wider text-amber-400">PRO</span>
+            </div>
+          )}
           <button 
             onClick={handleOpenNotifications}
             className="p-2 hover:bg-black/10 rounded-lg transition-colors relative"
@@ -674,34 +723,40 @@ export function Dashboard({ user, onLogout, setUser }: DashboardProps) {
           <UpdatesView user={user} />
         )}
 
+        {activeTab === 'bdpro' && (
+          <BDProView user={user} onSubscribe={() => {}} />
+        )}
+
         {activeTab === 'account' && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-4 max-w-md mx-auto space-y-4">
-            <h2 className="text-xl font-bold text-slate-800 mb-4">My Account</h2>
+            <h2 className="text-xl font-black text-slate-800 mb-4">My Account</h2>
             
-            <div className="bg-white rounded-2xl shadow-sm p-4">
-              <div className="flex items-center gap-4 mb-6 border-b border-slate-100 pb-4">
-                <div className="w-14 h-14 bg-indigo-100 text-indigo-500 rounded-full flex items-center justify-center">
-                  <UserIcon size={28} />
+            <div className="bg-white/80 backdrop-blur-md rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 p-6 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50/50 rounded-full blur-2xl -mr-16 -mt-16"></div>
+              
+              <div className="flex items-center gap-5 mb-6 border-b border-slate-100 pb-6 relative z-10">
+                <div className="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center shadow-inner border border-indigo-100/50">
+                  <UserIcon size={32} />
                 </div>
                 <div>
-                  <h3 className="font-bold text-slate-800 text-lg">{user.name}</h3>
-                  <p className="text-sm text-slate-500">{user.number}</p>
+                  <h3 className="font-black text-slate-800 text-xl">{user.name}</h3>
+                  <p className="text-sm font-bold text-slate-500 tracking-wide mt-0.5">{user.number}</p>
                 </div>
               </div>
               
-              <div className="space-y-3 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-slate-500">Email</span>
-                  <span className="font-medium text-slate-800">{user.gmail}</span>
+              <div className="space-y-4 text-sm relative z-10">
+                <div className="flex justify-between items-center py-2 border-b border-slate-50">
+                  <span className="text-slate-500 font-bold uppercase tracking-wider text-[10px]">Email</span>
+                  <span className="font-bold text-slate-800">{user.gmail}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-500">Joined</span>
-                  <span className="font-medium text-slate-800">{new Date(user.joinedAt).toLocaleDateString()}</span>
+                <div className="flex justify-between items-center py-2 border-b border-slate-50">
+                  <span className="text-slate-500 font-bold uppercase tracking-wider text-[10px]">Joined</span>
+                  <span className="font-bold text-slate-800">{new Date(user.joinedAt).toLocaleDateString()}</span>
                 </div>
                 {user.referralCode && (
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Referred By</span>
-                    <span className="font-medium text-slate-800">{user.referralCode}</span>
+                  <div className="flex justify-between items-center py-2">
+                    <span className="text-slate-500 font-bold uppercase tracking-wider text-[10px]">Referred By</span>
+                    <span className="font-bold text-slate-800 bg-slate-100 px-2 py-1 rounded-md">{user.referralCode}</span>
                   </div>
                 )}
               </div>
@@ -709,7 +764,7 @@ export function Dashboard({ user, onLogout, setUser }: DashboardProps) {
 
             <button 
               onClick={() => setShowReferral(true)}
-              className="w-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 hover:opacity-90 transition-opacity shadow-md"
+              className="w-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-black py-4 rounded-2xl flex items-center justify-center gap-2 hover:opacity-90 shadow-lg shadow-indigo-500/20 active:scale-95 transition-all text-sm uppercase tracking-wide"
             >
               <Gift size={20} />
               Refer & Earn Extra
@@ -718,7 +773,7 @@ export function Dashboard({ user, onLogout, setUser }: DashboardProps) {
             {isAdmin && (
               <button 
                 onClick={() => setActiveTab('admin')}
-                className="w-full bg-slate-800 text-white font-medium py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-slate-700 transition-colors"
+                className="w-full bg-slate-800 text-white font-black py-4 rounded-2xl flex items-center justify-center gap-2 hover:bg-slate-700 shadow-md active:scale-95 transition-all text-sm uppercase tracking-wide"
               >
                 <ShieldAlert size={20} />
                 Admin Panel
@@ -727,7 +782,7 @@ export function Dashboard({ user, onLogout, setUser }: DashboardProps) {
 
             <button 
               onClick={handleLogout}
-              className="w-full bg-red-50 text-red-600 font-medium py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-red-100 transition-colors"
+              className="w-full mt-4 bg-rose-50 text-rose-600 font-black py-4 rounded-2xl flex items-center justify-center gap-2 hover:bg-rose-100 transition-colors shadow-sm text-sm uppercase tracking-wide border border-rose-100"
             >
               <LogOut size={20} />
               Log Out

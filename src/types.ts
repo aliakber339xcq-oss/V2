@@ -9,6 +9,7 @@ export interface User {
   streak: number;
   lastCheckIn?: string;
   joinedAt: string;
+  isPro?: boolean;
 }
 
 export interface Task {

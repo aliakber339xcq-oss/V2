@@ -4,6 +4,7 @@ import { TaskItem, User } from '../types';
 import { ArrowLeft, Upload, CheckCircle2, Image as ImageIcon, ExternalLink, Loader2 } from 'lucide-react';
 import { motion } from 'motion/react';
 import confetti from 'canvas-confetti';
+import toast from 'react-hot-toast';
 
 export function TaskSubmitView({ task, user, onBack, onSuccess }: { task: TaskItem, user: User, onBack: () => void, onSuccess?: () => void }) {
   const [file, setFile] = useState<File | null>(null);
@@ -82,6 +83,7 @@ export function TaskSubmitView({ task, user, onBack, onSuccess }: { task: TaskIt
       // Small delay to show 100% completion
       await new Promise(res => setTimeout(res, 400));
       setSuccess(true);
+      toast.success('Task submitted successfully!', { icon: '🎉' });
       
       confetti({
         particleCount: 100,

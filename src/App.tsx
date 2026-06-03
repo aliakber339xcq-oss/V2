@@ -3,6 +3,7 @@ import { SignupForm } from './components/SignupForm';
 import { LoginForm } from './components/LoginForm';
 import { Dashboard } from './components/Dashboard';
 import { User } from './types';
+import { Toaster } from 'react-hot-toast';
 
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -38,25 +39,35 @@ export default function App() {
   if (isInitializing) return <div className="min-h-screen bg-slate-50"></div>;
 
   if (user) {
-    return <Dashboard user={user} onLogout={handleLogout} setUser={setUser} />;
+    return (
+      <>
+        <Dashboard user={user} onLogout={handleLogout} setUser={setUser} />
+        <Toaster position="top-center" />
+      </>
+    );
   }
 
-  return view === 'signup' ? (
-    <SignupForm 
-      onSignup={handleLogin} 
-      onSwitchToLogin={() => setView('login')} 
-    />
-  ) : (
-    <LoginForm 
-      onLogin={handleLogin} 
-      onSwitchToSignup={() => {
-        const isRegistered = localStorage.getItem('bdpay_device_registered');
-        if (isRegistered === 'true') {
-          alert('This device is already registered. You cannot create another account.');
-        } else {
-          setView('signup');
-        }
-      }} 
-    />
+  return (
+    <>
+      {view === 'signup' ? (
+        <SignupForm 
+          onSignup={handleLogin} 
+          onSwitchToLogin={() => setView('login')} 
+        />
+      ) : (
+        <LoginForm 
+          onLogin={handleLogin} 
+          onSwitchToSignup={() => {
+            const isRegistered = localStorage.getItem('bdpay_device_registered');
+            if (isRegistered === 'true') {
+              alert('This device is already registered. You cannot create another account.');
+            } else {
+              setView('signup');
+            }
+          }} 
+        />
+      )}
+      <Toaster position="top-center" />
+    </>
   );
 }
