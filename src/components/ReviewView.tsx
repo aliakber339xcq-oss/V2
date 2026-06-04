@@ -33,6 +33,16 @@ export function ReviewView({ user }: { user: User }) {
     loadReviews();
   }, []);
 
+  const handleDeleteReview = async (id: string) => {
+    if (!window.confirm("Are you sure you want to delete this review?")) return;
+    const { error } = await supabase.from('reviews').delete().eq('id', id);
+    if (!error) {
+      loadReviews();
+    } else {
+      alert("Failed to delete review.");
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!text && !imageFile) return;
@@ -174,8 +184,15 @@ export function ReviewView({ user }: { user: User }) {
                     <p className="text-[11px] font-bold tracking-wider text-slate-400 mt-0.5 uppercase">{new Date(review.created_at).toLocaleDateString()}</p>
                   </div>
                 </div>
-                <div className="flex gap-1 bg-amber-50 px-2.5 py-1.5 rounded-xl border border-amber-100/50">
-                  {[1,2,3,4,5].map(star => <Star key={star} size={14} className="text-amber-400 fill-amber-400" />)}
+                <div className="flex items-center gap-2">
+                  <div className="flex gap-1 bg-amber-50 px-2.5 py-1.5 rounded-xl border border-amber-100/50">
+                    {[1,2,3,4,5].map(star => <Star key={star} size={14} className="text-amber-400 fill-amber-400" />)}
+                  </div>
+                  {isAdmin && (
+                    <button onClick={() => handleDeleteReview(review.id)} className="text-red-500 bg-red-50 p-2 rounded-lg hover:bg-red-100 transition-colors">
+                      <X size={16} />
+                    </button>
+                  )}
                 </div>
               </div>
               

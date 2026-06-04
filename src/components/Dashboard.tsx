@@ -1,7 +1,7 @@
 import { User } from '../types';
 import { TASK_LIST } from '../data';
 import { motion, AnimatePresence } from 'motion/react';
-import { LogOut, Wallet, Flame, CheckCircle2, ChevronRight, Menu, Home, Clock, Coins, User as UserIcon, ShieldAlert, X, HelpCircle, Info, Star, Bell, Gift, Send, Crown } from 'lucide-react';
+import { LogOut, Wallet, Flame, CheckCircle2, ChevronRight, Menu, Home, Clock, Coins, User as UserIcon, ShieldAlert, X, HelpCircle, Info, Star, Bell, Gift, Send, Crown, Mail, Calendar } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { TaskListView } from './TaskListView';
@@ -16,6 +16,7 @@ import { ReviewView } from './ReviewView';
 import { UpdatesView } from './UpdatesView';
 import { SupportWidget } from './SupportWidget';
 import { BDProView } from './BDProView';
+import toast from 'react-hot-toast';
 
 interface DashboardProps {
   user: User;
@@ -240,6 +241,7 @@ export function Dashboard({ user, onLogout, setUser }: DashboardProps) {
       return;
     }
     if (taskId === 'premium' && !user.isPro) {
+      toast.error('Premium Task-এর জন্য BD Pro একটিভ করতে হবে', { icon: '👑' });
       setActiveTab('bdpro');
       return;
     }
@@ -306,38 +308,45 @@ export function Dashboard({ user, onLogout, setUser }: DashboardProps) {
               onClick={() => setShowPopup(false)}
             >
               <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
-                className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl relative"
+                initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                className="bg-white rounded-[2.5rem] p-8 w-full max-w-sm shadow-2xl relative overflow-hidden text-center"
                 onClick={e => e.stopPropagation()}
               >
-                <button onClick={() => setShowPopup(false)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 bg-slate-100 p-1.5 rounded-full">
-                  <X size={20} />
+                <div className="absolute top-0 right-0 w-48 h-48 bg-indigo-50/50 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
+                <div className="absolute bottom-0 left-0 w-32 h-32 bg-purple-50/50 rounded-full blur-2xl -ml-10 -mb-10 pointer-events-none"></div>
+                
+                <button onClick={() => setShowPopup(false)} className="absolute top-5 right-5 text-slate-400 hover:text-slate-600 bg-slate-50 hover:bg-slate-100 p-2 rounded-full transition-colors z-10">
+                  <X size={18} />
                 </button>
-                <div className="w-16 h-16 bg-indigo-50 text-indigo-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  <Star size={32} />
+                
+                <div className="relative z-10 mb-6">
+                  <div className="w-20 h-20 bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-3xl flex items-center justify-center mx-auto shadow-lg shadow-indigo-500/30 transform rotate-3 hover:rotate-0 transition-transform">
+                    <Bell size={36} className="absolute opacity-20" />
+                    <Star size={32} className="relative z-10" fill="currentColor" />
+                  </div>
                 </div>
-                <h2 className="text-xl font-bold text-center text-slate-800 mb-2">Welcome Active User!</h2>
-                <div className="text-sm text-slate-600 text-center mb-6 whitespace-pre-wrap">
-                  {siteSettings.popup_text || "Thank you for using BDPay."}
+
+                <h2 className="text-2xl font-black text-slate-800 mb-3 tracking-tight relative z-10">Welcome to BD Pay</h2>
+                <div className="text-sm text-slate-500 font-medium mb-8 leading-relaxed relative z-10 whitespace-pre-wrap px-2">
+                  {siteSettings.popup_text || "Thank you for joining our community. Start completing tasks to earn real rewards today!"}
                 </div>
-                <div className="space-y-3">
+                
+                <div className="space-y-3 relative z-10">
                   {siteSettings.tutorial_url && (
-                     <a href={siteSettings.tutorial_url} target="_blank" rel="noopener noreferrer" className="w-full bg-slate-100 text-slate-700 py-3 rounded-xl font-bold flex justify-center items-center gap-2 hover:bg-slate-200 transition-colors">
-                       Video Tutorial <ChevronRight size={18} />
-                     </a>
-                  )}
-                  {siteSettings.review_url && (
-                     <a href={siteSettings.review_url} target="_blank" rel="noopener noreferrer" className="w-full bg-emerald-50 text-emerald-600 py-3 rounded-xl font-bold flex justify-center items-center gap-2 hover:bg-emerald-100 transition-colors">
-                       Review App (5★) <ChevronRight size={18} />
+                     <a href={siteSettings.tutorial_url} target="_blank" rel="noopener noreferrer" className="w-full bg-slate-50 border border-slate-100 text-slate-700 py-3.5 rounded-2xl font-bold flex justify-center items-center gap-2 hover:bg-slate-100 transition-colors shadow-sm">
+                       Watch Tutorial <ChevronRight size={16} className="text-slate-400" />
                      </a>
                   )}
                   {siteSettings.telegram_url && (
-                     <a href={siteSettings.telegram_url} target="_blank" rel="noopener noreferrer" className="w-full bg-[#2AABEE]/10 text-[#2AABEE] py-3 rounded-xl font-bold flex justify-center items-center gap-2 hover:bg-[#2AABEE]/20 transition-colors">
-                       Join Telegram Channel
+                     <a href={siteSettings.telegram_url} target="_blank" rel="noopener noreferrer" className="w-full bg-[#2AABEE]/10 text-[#2AABEE] py-3.5 rounded-2xl font-bold flex justify-center items-center gap-2 hover:bg-[#2AABEE]/20 transition-colors shadow-sm">
+                       Join Telegram Updates
                      </a>
                   )}
+                  <button onClick={() => setShowPopup(false)} className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 rounded-2xl font-black shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/40 active:scale-[0.98] transition-all uppercase tracking-wide text-sm mt-2">
+                    Let's Start
+                  </button>
                 </div>
               </motion.div>
             </motion.div>
@@ -728,65 +737,85 @@ export function Dashboard({ user, onLogout, setUser }: DashboardProps) {
         )}
 
         {activeTab === 'account' && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-4 max-w-md mx-auto space-y-4">
-            <h2 className="text-xl font-black text-slate-800 mb-4">My Account</h2>
-            
-            <div className="bg-white/80 backdrop-blur-md rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 p-6 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50/50 rounded-full blur-2xl -mr-16 -mt-16"></div>
-              
-              <div className="flex items-center gap-5 mb-6 border-b border-slate-100 pb-6 relative z-10">
-                <div className="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center shadow-inner border border-indigo-100/50">
-                  <UserIcon size={32} />
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="pb-24">
+            <div className="bg-gradient-to-br from-indigo-600 via-indigo-700 to-violet-800 pt-8 pb-16 px-6 rounded-b-[2.5rem] shadow-xl relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-20 -mt-20"></div>
+              <div className="relative z-10 flex flex-col items-center">
+                <div className="w-24 h-24 bg-white/20 rounded-full mb-4 flex items-center justify-center p-1 shadow-inner backdrop-blur-md border border-white/20">
+                    <div className="w-full h-full bg-white text-indigo-600 rounded-full flex items-center justify-center">
+                        <UserIcon size={40} className="text-indigo-600" />
+                    </div>
                 </div>
-                <div>
-                  <h3 className="font-black text-slate-800 text-xl">{user.name}</h3>
-                  <p className="text-sm font-bold text-slate-500 tracking-wide mt-0.5">{user.number}</p>
+                <h2 className="text-2xl font-black text-white tracking-tight">{user.name}</h2>
+                <div className="flex items-center gap-2 mt-2">
+                    <p className="text-indigo-100 font-bold bg-white/10 px-3 py-1 rounded-full text-xs tracking-wider border border-white/10">{user.number}</p>
+                    {user.isPro && <span className="bg-amber-400 text-amber-900 border border-amber-300 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider shadow-sm flex items-center gap-1"><Crown size={12}/> Pro</span>}
                 </div>
-              </div>
-              
-              <div className="space-y-4 text-sm relative z-10">
-                <div className="flex justify-between items-center py-2 border-b border-slate-50">
-                  <span className="text-slate-500 font-bold uppercase tracking-wider text-[10px]">Email</span>
-                  <span className="font-bold text-slate-800">{user.gmail}</span>
-                </div>
-                <div className="flex justify-between items-center py-2 border-b border-slate-50">
-                  <span className="text-slate-500 font-bold uppercase tracking-wider text-[10px]">Joined</span>
-                  <span className="font-bold text-slate-800">{new Date(user.joinedAt).toLocaleDateString()}</span>
-                </div>
-                {user.referralCode && (
-                  <div className="flex justify-between items-center py-2">
-                    <span className="text-slate-500 font-bold uppercase tracking-wider text-[10px]">Referred By</span>
-                    <span className="font-bold text-slate-800 bg-slate-100 px-2 py-1 rounded-md">{user.referralCode}</span>
-                  </div>
-                )}
               </div>
             </div>
+            
+            <div className="px-5 -mt-8 relative z-20 space-y-4 max-w-md mx-auto">
+              <div className="bg-white rounded-3xl shadow-lg shadow-slate-200/50 border border-slate-100 p-5">
+                <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Account Details</h3>
+                <div className="space-y-4 text-sm relative z-10">
+                  <div className="flex justify-between items-center pb-3 border-b border-slate-50">
+                    <div className="flex items-center gap-2 text-slate-500 font-bold">
+                        <Mail size={16} className="text-slate-400" /> Email
+                    </div>
+                    <span className="font-bold text-slate-800">{user.gmail}</span>
+                  </div>
+                  <div className="flex justify-between items-center pb-3 border-b border-slate-50">
+                    <div className="flex items-center gap-2 text-slate-500 font-bold">
+                        <Calendar size={16} className="text-slate-400" /> Joined
+                    </div>
+                    <span className="font-bold text-slate-800">{new Date(user.joinedAt).toLocaleDateString()}</span>
+                  </div>
+                  {user.referralCode && (
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-2 text-slate-500 font-bold">
+                        <UserIcon size={16} className="text-slate-400" /> Referred By
+                      </div>
+                      <span className="font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md">{user.referralCode}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
 
-            <button 
-              onClick={() => setShowReferral(true)}
-              className="w-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-black py-4 rounded-2xl flex items-center justify-center gap-2 hover:opacity-90 shadow-lg shadow-indigo-500/20 active:scale-95 transition-all text-sm uppercase tracking-wide"
-            >
-              <Gift size={20} />
-              Refer & Earn Extra
-            </button>
+              <div className="grid grid-cols-2 gap-3">
+                <button 
+                  onClick={() => setShowReferral(true)}
+                  className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white p-4 rounded-2xl flex flex-col items-center justify-center gap-2 hover:opacity-90 shadow-lg shadow-indigo-500/20 transition-all group"
+                >
+                  <Gift size={24} className="group-hover:scale-110 transition-transform" />
+                  <span className="font-black text-[11px] uppercase tracking-wider">Refer & Earn</span>
+                </button>
+                <button 
+                  onClick={() => setActiveTab('bdpro')}
+                  className="bg-gradient-to-br from-amber-400 to-orange-500 text-white p-4 rounded-2xl flex flex-col items-center justify-center gap-2 hover:opacity-90 shadow-lg shadow-amber-500/20 transition-all group"
+                >
+                  <Crown size={24} className="group-hover:scale-110 transition-transform" />
+                  <span className="font-black text-[11px] uppercase tracking-wider">Upgrade Pro</span>
+                </button>
+              </div>
 
-            {isAdmin && (
+              {isAdmin && (
+                <button 
+                  onClick={() => setActiveTab('admin')}
+                  className="w-full bg-slate-800 text-white font-black py-4 rounded-2xl flex items-center justify-center gap-2 hover:bg-slate-700 shadow-md active:scale-95 transition-all text-sm uppercase tracking-wide"
+                >
+                  <ShieldAlert size={20} />
+                  Admin Panel
+                </button>
+              )}
+
               <button 
-                onClick={() => setActiveTab('admin')}
-                className="w-full bg-slate-800 text-white font-black py-4 rounded-2xl flex items-center justify-center gap-2 hover:bg-slate-700 shadow-md active:scale-95 transition-all text-sm uppercase tracking-wide"
+                onClick={handleLogout}
+                className="w-full bg-rose-50 text-rose-600 font-black py-4 rounded-2xl flex items-center justify-center gap-2 hover:bg-rose-100 transition-colors shadow-sm text-sm uppercase tracking-wide border border-rose-100"
               >
-                <ShieldAlert size={20} />
-                Admin Panel
+                <LogOut size={20} />
+                Log Out
               </button>
-            )}
-
-            <button 
-              onClick={handleLogout}
-              className="w-full mt-4 bg-rose-50 text-rose-600 font-black py-4 rounded-2xl flex items-center justify-center gap-2 hover:bg-rose-100 transition-colors shadow-sm text-sm uppercase tracking-wide border border-rose-100"
-            >
-              <LogOut size={20} />
-              Log Out
-            </button>
+            </div>
           </motion.div>
         )}
 
@@ -849,10 +878,12 @@ export function Dashboard({ user, onLogout, setUser }: DashboardProps) {
         href="https://t.me/Bdpaysite"
         target="_blank"
         rel="noopener noreferrer"
-        className="fixed bottom-[90px] left-4 sm:bottom-24 sm:left-4 z-40 bg-[#0088cc] text-white w-14 h-14 rounded-full shadow-[0_4px_15px_rgba(0,136,204,0.4)] flex items-center justify-center hover:scale-110 active:scale-95 transition-all"
+        className="fixed bottom-[164px] right-4 sm:bottom-[164px] sm:right-4 z-40 bg-[#0088cc] text-white w-14 h-14 rounded-full shadow-[0_4px_15px_rgba(0,136,204,0.4)] flex items-center justify-center hover:scale-110 active:scale-95 transition-all"
         style={{ animation: 'pulse 2s infinite' }}
       >
-        <Send size={24} className="-translate-x-0.5 translate-y-0.5" />
+        <svg fill="currentColor" viewBox="0 0 24 24" height="28" width="28" xmlns="http://www.w3.org/2000/svg">
+          <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.664 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+        </svg>
       </a>
 
       <style dangerouslySetInnerHTML={{__html: `

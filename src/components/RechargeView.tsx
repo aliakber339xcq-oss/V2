@@ -214,11 +214,11 @@ export function RechargeView({ user, onBack }: { user: User, onBack: () => void 
                 <div className="space-y-2 pt-2">
                   <div className="flex items-center justify-between bg-white p-2.5 rounded-xl border border-indigo-200 shadow-sm">
                     <div>
-                      <div className="font-mono font-bold text-slate-800 text-base leading-none">01309855866</div>
+                      <div className="font-mono font-bold text-slate-800 text-base leading-none">01624175616</div>
                       <div className="text-[10px] text-slate-500 font-bold uppercase mt-1">bKash (Personal)</div>
                     </div>
                     <button 
-                      onClick={() => { navigator.clipboard.writeText('01309855866'); setCopiedType('bkash'); setTimeout(() => setCopiedType(null), 2000); }}
+                      onClick={() => { navigator.clipboard.writeText('01624175616'); setCopiedType('bkash'); setTimeout(() => setCopiedType(null), 2000); }}
                       className="text-indigo-600 bg-indigo-50 px-4 py-2 rounded-lg font-bold text-xs hover:bg-indigo-100 transition-colors min-w-[70px] text-center"
                     >
                       {copiedType === 'bkash' ? 'Copied' : 'Copy'}
@@ -227,11 +227,11 @@ export function RechargeView({ user, onBack }: { user: User, onBack: () => void 
                   
                   <div className="flex items-center justify-between bg-white p-2.5 rounded-xl border border-indigo-200 shadow-sm">
                     <div>
-                      <div className="font-mono font-bold text-slate-800 text-base leading-none">01811223344</div>
+                      <div className="font-mono font-bold text-slate-800 text-base leading-none">01912107604</div>
                       <div className="text-[10px] text-slate-500 font-bold uppercase mt-1">Nagad (Personal)</div>
                     </div>
                     <button 
-                      onClick={() => { navigator.clipboard.writeText('01811223344'); setCopiedType('nagad'); setTimeout(() => setCopiedType(null), 2000); }}
+                      onClick={() => { navigator.clipboard.writeText('01912107604'); setCopiedType('nagad'); setTimeout(() => setCopiedType(null), 2000); }}
                       className="text-indigo-600 bg-indigo-50 px-4 py-2 rounded-lg font-bold text-xs hover:bg-indigo-100 transition-colors min-w-[70px] text-center"
                     >
                       {copiedType === 'nagad' ? 'Copied' : 'Copy'}

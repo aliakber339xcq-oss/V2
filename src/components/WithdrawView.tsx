@@ -6,7 +6,7 @@ import { motion } from 'motion/react';
 import toast from 'react-hot-toast';
 
 export function WithdrawView({ user, totalReferrals, onWithdraw }: { user: User, totalReferrals: number, onWithdraw: () => void }) {
-  const [method, setMethod] = useState<'bkash' | 'nagad' | 'rocket'>('bkash');
+  const [method, setMethod] = useState<'bkash' | 'nagad' | 'rocket' | 'usdt'>('bkash');
   const [accountNumber, setAccountNumber] = useState('');
   const [amount, setAmount] = useState('');
   const [loading, setLoading] = useState(false);
@@ -125,11 +125,12 @@ export function WithdrawView({ user, totalReferrals, onWithdraw }: { user: User,
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-bold text-slate-700 mb-3">উত্তোলনের মাধ্যম</label>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 {[
                   { id: 'bkash', label: 'bKash', color: 'border-pink-200 bg-pink-50 text-pink-700', hover: 'hover:border-pink-300 hover:bg-pink-100', active: 'bg-pink-600 text-white shadow-pink-200 border-pink-600' },
                   { id: 'nagad', label: 'Nagad', color: 'border-orange-200 bg-orange-50 text-orange-700', hover: 'hover:border-orange-300 hover:bg-orange-100', active: 'bg-orange-500 text-white shadow-orange-200 border-orange-500' },
-                  { id: 'rocket', label: 'Rocket', color: 'border-purple-200 bg-purple-50 text-purple-700', hover: 'hover:border-purple-300 hover:bg-purple-100', active: 'bg-purple-600 text-white shadow-purple-200 border-purple-600' }
+                  { id: 'rocket', label: 'Rocket', color: 'border-purple-200 bg-purple-50 text-purple-700', hover: 'hover:border-purple-300 hover:bg-purple-100', active: 'bg-purple-600 text-white shadow-purple-200 border-purple-600' },
+                  { id: 'usdt', label: 'USDT (BEP-20)', sub: '30% Bonus!', color: 'border-teal-200 bg-teal-50 text-teal-700', hover: 'hover:border-teal-300 hover:bg-teal-100', active: 'bg-teal-600 text-white shadow-teal-200 border-teal-600' }
                 ].map((m) => (
                   <button
                     key={m.id}
@@ -142,9 +143,16 @@ export function WithdrawView({ user, totalReferrals, onWithdraw }: { user: User,
                     }`}
                   >
                     {m.label}
+                    {m.sub && <span className="text-[9px] bg-white/20 px-1.5 py-0.5 rounded text-white">{m.sub}</span>}
+                    {m.sub && method !== m.id && <span className="text-[9px] bg-teal-500 text-white px-1.5 py-0.5 rounded">{m.sub}</span>}
                   </button>
                 ))}
               </div>
+              {method === 'usdt' && (
+                <div className="mt-2 text-xs font-bold text-teal-600 bg-teal-50 p-2 rounded-lg border border-teal-100 flex items-center justify-center gap-1">
+                  * Trust Wallet use korte hobe
+                </div>
+              )}
             </div>
 
             <div>

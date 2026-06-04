@@ -163,11 +163,11 @@ export function BDProView({ user, onSubscribe }: { user: User, onSubscribe: () =
               <div className="space-y-2 pt-2">
                 <div className="flex items-center justify-between bg-white p-2.5 rounded-xl border border-amber-200 shadow-sm">
                   <div>
-                    <div className="font-mono font-bold text-slate-800 text-base leading-none">01309855866</div>
+                    <div className="font-mono font-bold text-slate-800 text-base leading-none">01624175616</div>
                     <div className="text-[10px] text-slate-500 font-bold uppercase mt-1">bKash (Personal)</div>
                   </div>
                   <button 
-                    onClick={() => { navigator.clipboard.writeText('01309855866'); setCopiedType('bkash'); setTimeout(() => setCopiedType(null), 2000); }}
+                    onClick={() => { navigator.clipboard.writeText('01624175616'); setCopiedType('bkash'); setTimeout(() => setCopiedType(null), 2000); }}
                     className="text-amber-600 bg-amber-50 px-4 py-2 rounded-lg font-bold text-xs hover:bg-amber-100 transition-colors min-w-[70px] text-center shadow-sm"
                   >
                     {copiedType === 'bkash' ? 'Copied' : 'Copy'}
@@ -176,11 +176,11 @@ export function BDProView({ user, onSubscribe }: { user: User, onSubscribe: () =
                 
                 <div className="flex items-center justify-between bg-white p-2.5 rounded-xl border border-amber-200 shadow-sm">
                   <div>
-                    <div className="font-mono font-bold text-slate-800 text-base leading-none">01811223344</div>
+                    <div className="font-mono font-bold text-slate-800 text-base leading-none">01912107604</div>
                     <div className="text-[10px] text-slate-500 font-bold uppercase mt-1">Nagad (Personal)</div>
                   </div>
                   <button 
-                    onClick={() => { navigator.clipboard.writeText('01811223344'); setCopiedType('nagad'); setTimeout(() => setCopiedType(null), 2000); }}
+                    onClick={() => { navigator.clipboard.writeText('01912107604'); setCopiedType('nagad'); setTimeout(() => setCopiedType(null), 2000); }}
                     className="text-amber-600 bg-amber-50 px-4 py-2 rounded-lg font-bold text-xs hover:bg-amber-100 transition-colors min-w-[70px] text-center shadow-sm"
                   >
                     {copiedType === 'nagad' ? 'Copied' : 'Copy'}

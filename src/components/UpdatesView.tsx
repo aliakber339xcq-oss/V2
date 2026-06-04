@@ -42,6 +42,16 @@ export function UpdatesView({ user }: { user: User }) {
     setImageFiles(prev => prev.filter((_, i) => i !== index));
   };
 
+  const handleDeleteUpdate = async (id: string) => {
+    if (!window.confirm("Are you sure you want to delete this update?")) return;
+    const { error } = await supabase.from('platform_updates').delete().eq('id', id);
+    if (!error) {
+      loadUpdates();
+    } else {
+      alert("Failed to delete update.");
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!text && imageFiles.length === 0) return;
@@ -204,6 +214,11 @@ export function UpdatesView({ user }: { user: User }) {
                       <p className="text-[11px] font-bold tracking-wide text-slate-400 capitalize">{new Date(update.created_at).toLocaleString()}</p>
                     </div>
                   </div>
+                  {isAdmin && (
+                    <button onClick={() => handleDeleteUpdate(update.id)} className="text-red-500 bg-red-50 p-2 rounded-lg hover:bg-red-100 transition-colors">
+                      <X size={16} />
+                    </button>
+                  )}
                 </div>
                 
                 {update.text && (
