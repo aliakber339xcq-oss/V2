@@ -7,10 +7,11 @@ import { motion } from 'motion/react';
 import { AdminInbox } from './AdminInbox';
 
 export function AdminPanel({ onBack }: { onBack: () => void }) {
-  const [tab, setTab] = useState<'home' | 'submissions' | 'users' | 'tasks' | 'keys' | 'recharges' | 'gmail' | 'offers' | 'notify' | 'settings' | 'inbox'>('home');
+  const [tab, setTab] = useState<'home' | 'submissions' | 'users' | 'tasks' | 'keys' | 'recharges' | 'gmail' | 'offers' | 'notify' | 'settings' | 'inbox' | 'withdrawals'>('home');
   
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [recharges, setRecharges] = useState<any[]>([]);
+  const [withdrawals, setWithdrawals] = useState<any[]>([]);
   const [gmailTasks, setGmailTasks] = useState<any[]>([]);
   const [rechargeOffers, setRechargeOffers] = useState<any[]>([]);
   const [settings, setSettings] = useState<any>(null);
@@ -49,10 +50,29 @@ export function AdminPanel({ onBack }: { onBack: () => void }) {
     if (tab === 'keys') loadKeys();
     if (tab === 'tasks') loadTasks();
     if (tab === 'recharges') loadRecharges();
+    if (tab === 'withdrawals') loadWithdrawals();
     if (tab === 'gmail') loadGmailTasks();
     if (tab === 'offers') loadOffers();
     if (tab === 'settings') loadSettings();
   }, [tab]);
+
+  // --------------- Withdrawals Logic ---------------
+  const loadWithdrawals = async () => {
+    setLoading(true);
+    const { data } = await supabase
+      .from('withdrawals')
+      .select('*')
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false });
+    
+    if (data) setWithdrawals(data);
+    setLoading(false);
+  };
+
+  const handleWithdrawalAction = async (rec: any, action: 'approved' | 'rejected') => {
+    await supabase.from('withdrawals').update({ status: action }).eq('id', rec.id);
+    setWithdrawals(withdrawals.filter(r => r.id !== rec.id));
+  };
 
   // --------------- Users & Stats Logic ---------------
   const loadStats = async () => {
@@ -367,6 +387,12 @@ export function AdminPanel({ onBack }: { onBack: () => void }) {
             Recharges
           </button>
           <button 
+            onClick={() => setTab('withdrawals')}
+            className={`py-2 px-3 text-[10px] sm:text-xs font-bold rounded-xl transition-all text-center whitespace-nowrap flex-1 min-w-[70px] ${tab === 'withdrawals' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+          >
+            Withdrawals
+          </button>
+          <button 
             onClick={() => setTab('gmail')}
             className={`py-2 px-3 text-[10px] sm:text-xs font-bold rounded-xl transition-all text-center whitespace-nowrap flex-1 min-w-[70px] ${tab === 'gmail' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
           >
@@ -557,13 +583,20 @@ export function AdminPanel({ onBack }: { onBack: () => void }) {
         {/* Recharges Tab */}
         {tab === 'recharges' && (
           <div className="space-y-4">
-            <h2 className="text-lg font-bold text-slate-800">Pending Recharges</h2>
-            {loading ? <p className="text-slate-500">Loading...</p> : recharges.length === 0 ? <p className="text-slate-500">No pending recharges.</p> : recharges.map(rec => (
+            <h2 className="text-lg font-bold text-slate-800">Pending Recharges & Pro Requests</h2>
+            {loading ? <p className="text-slate-500">Loading...</p> : recharges.length === 0 ? <p className="text-slate-500">No pending requests.</p> : recharges.map(rec => (
               <div key={rec.id} className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 space-y-3">
                 <div className="flex justify-between items-start">
                   <div>
-                    <h3 className="font-bold text-slate-800 text-lg">{rec.offer_details || 'Regular Top-Up'}</h3>
-                    <p className="text-sm font-black text-indigo-600">Amount: ৳{rec.amount}</p>
+                    <h3 className="font-bold text-slate-800 text-lg flex items-center gap-2">
+                       {rec.offer_details === 'BD Pro Lifetime Access' ? (
+                          <span className="bg-amber-100 text-amber-700 px-2 py-1 rounded-md text-xs font-black uppercase tracking-widest border border-amber-200">
+                             Pro Request
+                          </span>
+                       ) : null}
+                       {rec.offer_details || 'Regular Top-Up'}
+                    </h3>
+                    <p className="text-sm font-black text-indigo-600 mt-1">Amount: ৳{rec.amount}</p>
                   </div>
                   <span className="text-xs text-slate-400">{new Date(rec.created_at).toLocaleDateString()}</span>
                 </div>
@@ -589,6 +622,46 @@ export function AdminPanel({ onBack }: { onBack: () => void }) {
                   <button 
                     onClick={() => handleRechargeAction(rec, 'rejected')}
                     className="flex-1 bg-red-100 text-red-700 py-2.5 rounded-lg flex items-center justify-center gap-2 hover:bg-red-200 font-bold transition-colors"
+                  >
+                    <X size={18} /> Reject
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Withdrawals Tab */}
+        {tab === 'withdrawals' && (
+          <div className="space-y-4">
+            <h2 className="text-lg font-bold text-slate-800">Pending Withdrawals</h2>
+            {loading ? <p className="text-slate-500">Loading...</p> : withdrawals.length === 0 ? <p className="text-slate-500">No pending withdrawals.</p> : withdrawals.map(w => (
+              <div key={w.id} className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 space-y-3">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="font-bold text-slate-800 text-lg capitalize">{w.method} Withdrawal</h3>
+                    <p className="text-sm font-black text-emerald-600">Amount: ৳{w.amount}</p>
+                  </div>
+                  <span className="text-xs text-slate-400">{new Date(w.created_at).toLocaleDateString()}</span>
+                </div>
+                <div className="flex items-center justify-between p-2 bg-slate-50 rounded-lg">
+                  <span className="text-sm font-bold text-slate-600 uppercase tracking-widest leading-none block">
+                    Acct:
+                  </span>
+                  <span className="font-mono text-sm font-black text-slate-800 bg-white px-2 py-1 rounded shadow-sm border border-slate-200 ml-2">
+                    {w.account_number}
+                  </span>
+                </div>
+                <div className="pt-3 border-t border-slate-100 flex gap-2">
+                  <button 
+                    onClick={() => handleWithdrawalAction(w, 'approved')}
+                    className="flex-1 bg-emerald-50 text-emerald-600 py-2 rounded-lg font-medium flex justify-center items-center gap-1 hover:bg-emerald-100 transition-colors"
+                  >
+                    <Check size={18} /> Approve
+                  </button>
+                  <button 
+                    onClick={() => handleWithdrawalAction(w, 'rejected')}
+                    className="flex-1 bg-red-50 text-red-600 py-2 rounded-lg font-medium flex justify-center items-center gap-1 hover:bg-red-100 transition-colors"
                   >
                     <X size={18} /> Reject
                   </button>

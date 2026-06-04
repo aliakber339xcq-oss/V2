@@ -66,6 +66,7 @@ export function Dashboard({ user, onLogout, setUser }: DashboardProps) {
 
   const [siteSettings, setSiteSettings] = useState<any>(null);
   const [showPopup, setShowPopup] = useState(false);
+  const [taskCounts, setTaskCounts] = useState<Record<string, number>>({});
 
   const isAdmin = user.gmail === 'admin@gmail.com';
 
@@ -85,6 +86,30 @@ export function Dashboard({ user, onLogout, setUser }: DashboardProps) {
       }
     };
     checkSettings();
+
+    // Fetch available task counts
+    const fetchTaskCounts = async () => {
+      try {
+        const { data: allTasks } = await supabase.from('tasks').select('id, task_type').eq('is_active', true);
+        const { data: userSubmissions } = await supabase.from('submissions').select('task_id').eq('user_id', user.id).in('status', ['pending', 'approved']);
+        
+        if (allTasks) {
+          const completedTaskIds = new Set((userSubmissions || []).map(s => s.task_id));
+          const counts: Record<string, number> = {};
+          
+          allTasks.forEach(task => {
+            if (!completedTaskIds.has(task.id)) {
+              counts[task.task_type] = (counts[task.task_type] || 0) + 1;
+            }
+          });
+          
+          setTaskCounts(counts);
+        }
+      } catch (err) {
+        console.error("Failed to fetch task counts", err);
+      }
+    };
+    fetchTaskCounts();
   }, []);
 
   useEffect(() => {
@@ -676,8 +701,13 @@ export function Dashboard({ user, onLogout, setUser }: DashboardProps) {
                         <task.icon size={24} />
                       </div>
                       <div className="relative z-10 w-full mt-2">
-                        <span className="font-bold text-[14px] text-slate-800 leading-snug group-hover:text-primary transition-colors block">
+                        <span className="font-bold text-[14px] text-slate-800 leading-snug group-hover:text-primary transition-colors flex items-center justify-between">
                           {task.title}
+                          {taskCounts[task.id] !== undefined && (
+                            <span className="bg-indigo-100 text-indigo-700 text-[10px] px-1.5 py-0.5 rounded-md font-bold">
+                              {taskCounts[task.id]}
+                            </span>
+                          )}
                         </span>
                         <div className="hidden group-hover:flex items-center gap-1 mt-2 text-primary font-semibold text-[11px] opacity-0 group-hover:opacity-100 transition-opacity">
                           Start <ChevronRight size={12} className="group-hover:translate-x-0.5 transition-transform" />
