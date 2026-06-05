@@ -132,7 +132,7 @@ export function SupportWidget({ user }: { user: User }) {
 
     setUploading(true);
     try {
-      const { data: keys } = await supabase.from('imgbb_keys').select('api_key').limit(1);
+      const { data: keys } = await supabase.from('imgbb_keys').select('api_key').eq('is_active', true).limit(1);
       if (keys && keys[0]) {
         const formData = new FormData();
         formData.append('image', file);
@@ -143,10 +143,15 @@ export function SupportWidget({ user }: { user: User }) {
         const resData = await res.json();
         if (resData.success) {
           await handleSend(undefined, resData.data.url);
+        } else {
+          alert('Image upload API returned error: ' + (resData.error?.message || 'Unknown error'));
         }
+      } else {
+        alert('No active ImgBB API keys found. Please contact admin.');
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Upload failed', err);
+      alert('Upload failed: ' + err.message);
     } finally {
       setUploading(false);
     }

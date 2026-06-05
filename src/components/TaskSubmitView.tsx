@@ -58,8 +58,6 @@ export function TaskSubmitView({ task, user, onBack, onSuccess }: { task: TaskIt
           }
         } catch(e) {
           console.error('Imgbb upload failed with key', k.api_key);
-          // Disable the key since it failed
-          await supabase.from('imgbb_keys').update({ is_active: false }).eq('id', k.id);
         }
       }
       

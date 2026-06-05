@@ -126,7 +126,7 @@ export function AdminInbox({ onClose }: { onClose?: () => void }) {
 
     setUploading(true);
     try {
-      const { data: keys } = await supabase.from('imgbb_keys').select('api_key').limit(1);
+      const { data: keys } = await supabase.from('imgbb_keys').select('api_key').eq('is_active', true).limit(1);
       if (keys && keys[0]) {
         const formData = new FormData();
         formData.append('image', file);
@@ -138,14 +138,14 @@ export function AdminInbox({ onClose }: { onClose?: () => void }) {
         if (resData.success) {
           await handleSend(resData.data.url);
         } else {
-          alert('Failed to upload image to ImgBB.');
+          alert('Image upload API returned error: ' + (resData.error?.message || 'Unknown error'));
         }
       } else {
-        alert('ImgBB API key not configured.');
+        alert('No active ImgBB API keys found. Please contact admin.');
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      alert('Upload failed');
+      alert('Upload failed: ' + err.message);
     } finally {
       setUploading(false);
     }
