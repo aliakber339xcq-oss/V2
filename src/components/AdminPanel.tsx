@@ -245,6 +245,10 @@ export function AdminPanel({ onBack }: { onBack: () => void }) {
     if (action === 'approved' && rec.offer_details === 'BD Pro Lifetime Access') {
       await supabase.from('user_profiles').update({ is_pro: true }).eq('user_id', rec.user_id);
     }
+
+    if (action === 'approved' && rec.offer_details === 'KYC Verification') {
+      await supabase.from('user_profiles').update({ is_kyc_verified: true }).eq('user_id', rec.user_id);
+    }
     
     setRecharges(recharges.filter(r => r.id !== rec.id));
   };
@@ -594,6 +598,11 @@ export function AdminPanel({ onBack }: { onBack: () => void }) {
                              Pro Request
                           </span>
                        ) : null}
+                       {rec.offer_details === 'KYC Verification' ? (
+                          <span className="bg-emerald-100 text-emerald-700 px-2 py-1 rounded-md text-xs font-black uppercase tracking-widest border border-emerald-200">
+                             KYC Request
+                          </span>
+                       ) : null}
                        {rec.offer_details || 'Regular Top-Up'}
                     </h3>
                     <p className="text-sm font-black text-indigo-600 mt-1">Amount: ৳{rec.amount}</p>
@@ -939,6 +948,10 @@ export function AdminPanel({ onBack }: { onBack: () => void }) {
                   <div className="flex items-center gap-3">
                     <input type="checkbox" checked={settings.popup_enabled} onChange={e => setSettings({...settings, popup_enabled: e.target.checked})} id="popup_enabled" className="w-4 h-4 text-indigo-600 rounded" />
                     <label htmlFor="popup_enabled" className="text-sm font-bold text-slate-700">Enable Random Welcome Popup (25% chance)</label>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <input type="checkbox" checked={settings.kyc_enabled || false} onChange={e => setSettings({...settings, kyc_enabled: e.target.checked})} id="kyc_enabled" className="w-4 h-4 text-emerald-600 rounded" />
+                    <label htmlFor="kyc_enabled" className="text-sm font-bold text-emerald-700">Enable KYC Verification (Requires 50 BDT payment for accessing tasks/withdraw)</label>
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-slate-500 mb-1">Popup Text</label>

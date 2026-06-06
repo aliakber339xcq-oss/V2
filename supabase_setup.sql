@@ -160,6 +160,9 @@ CREATE TABLE IF NOT EXISTS site_settings (
 
 ALTER TABLE site_settings DISABLE ROW LEVEL SECURITY;
 ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS global_notice TEXT;
+ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS kyc_enabled BOOLEAN DEFAULT false;
+
+ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS is_kyc_verified BOOLEAN DEFAULT false;
 
 INSERT INTO site_settings (popup_enabled, popup_text, tutorial_url, review_url, telegram_url, global_notice)
 SELECT false, 'Welcome to BDPay!', 'https://youtube.com', 'https://play.google.com', 'https://t.me', ''
@@ -206,14 +209,14 @@ BEGIN
   
   -- Insert profile if not exists
   INSERT INTO user_profiles (user_id, email, name, number, my_referral_code, referred_by_code)
-  SELECT auth.uid(), auth.jwt()->>'email', auth.jwt()->'user_metadata'->>'name', auth.jwt()->'user_metadata'->>'phone', v_my_code, p_ref_code
+  SELECT auth.uid(), auth.jwt()->>'email', auth.jwt()->'user_metadata'->>'name', auth.jwt()->'user_metadata'->>'number', v_my_code, p_ref_code
   WHERE NOT EXISTS (SELECT 1 FROM user_profiles WHERE user_id = auth.uid());
 
   -- If a referral code was passed, process it
   IF p_ref_code IS NOT NULL AND p_ref_code != '' THEN
     
     -- Check if referrer exists based on code
-    SELECT user_id INTO v_referrer_id FROM user_profiles WHERE my_referral_code = p_ref_code AND user_id != auth.uid();
+    SELECT user_id INTO v_referrer_id FROM user_profiles WHERE my_referral_code = UPPER(p_ref_code) AND user_id != auth.uid();
     
     IF v_referrer_id IS NOT NULL THEN
       -- Check if referral already recorded

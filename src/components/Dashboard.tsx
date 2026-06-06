@@ -16,6 +16,7 @@ import { ReviewView } from './ReviewView';
 import { UpdatesView } from './UpdatesView';
 import { SupportWidget } from './SupportWidget';
 import { BDProView } from './BDProView';
+import { KYCView } from './KYCView';
 import toast from 'react-hot-toast';
 
 interface DashboardProps {
@@ -28,9 +29,9 @@ export function Dashboard({ user, onLogout, setUser }: DashboardProps) {
   const [canCheckIn, setCanCheckIn] = useState(true);
   const [checkInMsg, setCheckInMsg] = useState('');
   const [isUpdating, setIsUpdating] = useState(false);
-  const [activeTab, setActiveTab] = useState<'home' | 'history' | 'withdraw' | 'reviews' | 'account' | 'admin' | 'updates' | 'bdpro'>(() => {
+  const [activeTab, setActiveTab] = useState<'home' | 'history' | 'withdraw' | 'reviews' | 'account' | 'admin' | 'updates' | 'bdpro' | 'kyc'>(() => {
     const path = window.location.pathname.replace(/^\/+/, '').replace(/\/+$/, '');
-    return ['home', 'history', 'withdraw', 'reviews', 'account', 'admin', 'updates', 'bdpro'].includes(path) ? (path as any) : 'home';
+    return ['home', 'history', 'withdraw', 'reviews', 'account', 'admin', 'updates', 'bdpro', 'kyc'].includes(path) ? (path as any) : 'home';
   });
 
   useEffect(() => {
@@ -145,9 +146,10 @@ export function Dashboard({ user, onLogout, setUser }: DashboardProps) {
         // Ensure profile and process referral
         await supabase.rpc('ensure_user_profile', { p_ref_code: user.referralCode || null });
 
-        // Fetch actual stats
-        const { data: profile } = await supabase.from('user_profiles').select('total_referrals, is_pro, is_banned').eq('user_id', user.id).single();
+        // Fetch actual stats - use select(*) to avoid crashing if columns are missing
+        const { data: profile } = await supabase.from('user_profiles').select('*').eq('user_id', user.id).single();
         let isProFlag = false;
+        let isKycFlag = false;
         if (profile) {
           if (profile.is_banned) {
             alert('Your account has been banned. Please contact support.');
@@ -156,9 +158,10 @@ export function Dashboard({ user, onLogout, setUser }: DashboardProps) {
           }
           setTotalReferrals(profile.total_referrals || 0);
           isProFlag = !!profile.is_pro;
+          isKycFlag = !!profile.is_kyc_verified;
         }
 
-        let updatedUser: User = { ...user, isPro: isProFlag };
+        let updatedUser: User = { ...user, isPro: isProFlag, is_kyc_verified: isKycFlag };
 
         const { data } = await supabase.auth.getUser();
         if (data?.user) {
@@ -173,7 +176,7 @@ export function Dashboard({ user, onLogout, setUser }: DashboardProps) {
         }
         
         // Update local state if there are changes
-        if (updatedUser.balance !== user.balance || updatedUser.streak !== user.streak || updatedUser.lastCheckIn !== user.lastCheckIn || updatedUser.isPro !== user.isPro) {
+        if (updatedUser.balance !== user.balance || updatedUser.streak !== user.streak || updatedUser.lastCheckIn !== user.lastCheckIn || updatedUser.isPro !== user.isPro || updatedUser.is_kyc_verified !== user.is_kyc_verified) {
            setUser(updatedUser);
            localStorage.setItem('bdpay_user', JSON.stringify(updatedUser));
            localStorage.setItem('bdpay_registered_user_data', JSON.stringify(updatedUser));
@@ -268,6 +271,11 @@ export function Dashboard({ user, onLogout, setUser }: DashboardProps) {
   };
 
   const startTask = (taskId: string, taskTitle: string) => {
+    if (siteSettings?.kyc_enabled && !user.is_kyc_verified && taskId !== 'recharge') {
+      setActiveTab('kyc');
+      return;
+    }
+
     if (taskId === 'recharge') {
       setIsRecharging(true);
       return;
@@ -282,6 +290,14 @@ export function Dashboard({ user, onLogout, setUser }: DashboardProps) {
     }
     setActiveTaskCategory(taskId);
     setActiveTaskTitle(taskTitle);
+  };
+
+  const handleTabChange = (tab: any) => {
+    if (siteSettings?.kyc_enabled && !user.is_kyc_verified && tab === 'withdraw') {
+      setActiveTab('kyc');
+      return;
+    }
+    setActiveTab(tab);
   };
 
   const handleOpenNotifications = async () => {
@@ -648,6 +664,26 @@ export function Dashboard({ user, onLogout, setUser }: DashboardProps) {
 
               {/* Info Banner & Age */}
               <SiteAgeCounter />
+              
+              {/* KYC Pending Banner */}
+              {siteSettings?.kyc_enabled && !user.is_kyc_verified && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                  className="bg-red-50 border border-red-200 rounded-2xl p-4 flex items-start gap-3 shadow-sm mx-1"
+                >
+                  <ShieldAlert className="text-red-500 shrink-0 mt-0.5" size={24} />
+                  <div className="flex-1">
+                    <h3 className="text-red-800 font-bold text-sm mb-1">অ্যাকাউন্ট ভেরিফিকেশন (KYC) প্রয়োজন</h3>
+                    <p className="text-red-600 text-xs mb-3">টাস্ক সম্পন্ন করতে এবং উইথড্র করতে অ্যাকাউন্ট ভেরিফাই করুন।</p>
+                    <button 
+                      onClick={() => setActiveTab('kyc')}
+                      className="bg-red-500 text-white text-xs font-bold px-4 py-2 rounded-lg hover:bg-red-600 transition-colors shadow-sm"
+                    >
+                      Verify Now
+                    </button>
+                  </div>
+                </motion.div>
+              )}
 
               {/* Highlighted Tasks */}
               <div className="space-y-4 pt-2">
@@ -752,7 +788,7 @@ export function Dashboard({ user, onLogout, setUser }: DashboardProps) {
           <WithdrawView 
             user={user} 
             totalReferrals={totalReferrals} 
-            onWithdraw={() => setActiveTab('history')} 
+            onWithdraw={() => handleTabChange('history')} 
           />
         )}
 
@@ -765,7 +801,11 @@ export function Dashboard({ user, onLogout, setUser }: DashboardProps) {
         )}
 
         {activeTab === 'bdpro' && (
-          <BDProView user={user} onSubscribe={() => setActiveTab('home')} setUser={setUser} />
+          <BDProView user={user} onSubscribe={() => handleTabChange('home')} setUser={setUser} />
+        )}
+
+        {activeTab === 'kyc' && (
+          <KYCView user={user} onBack={() => setActiveTab('home')} />
         )}
 
         {activeTab === 'account' && (
@@ -862,7 +902,7 @@ export function Dashboard({ user, onLogout, setUser }: DashboardProps) {
           <div className="max-w-md mx-auto">
             <div className="flex justify-around items-center px-2 py-2">
               <button 
-                onClick={() => setActiveTab('home')}
+                onClick={() => handleTabChange('home')}
                 className={`flex flex-col items-center gap-1 flex-1 py-2 rounded-xl transition-all ${activeTab === 'home' ? 'text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}
               >
                 <Home size={24} className={activeTab === 'home' ? 'fill-indigo-600/20' : ''} />
@@ -870,7 +910,7 @@ export function Dashboard({ user, onLogout, setUser }: DashboardProps) {
               </button>
               
               <button 
-                onClick={() => setActiveTab('history')}
+                onClick={() => handleTabChange('history')}
                 className={`flex flex-col items-center gap-1 flex-1 py-2 rounded-xl transition-all ${activeTab === 'history' ? 'text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}
               >
                 <Clock size={24} className={activeTab === 'history' ? 'fill-indigo-600/20' : ''} />
@@ -878,7 +918,7 @@ export function Dashboard({ user, onLogout, setUser }: DashboardProps) {
               </button>
               
               <button 
-                onClick={() => setActiveTab('withdraw')}
+                onClick={() => handleTabChange('withdraw')}
                 className={`flex flex-col items-center gap-1 flex-1 py-2 rounded-xl transition-all ${activeTab === 'withdraw' ? 'text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}
               >
                 <Wallet size={24} className={activeTab === 'withdraw' ? 'fill-indigo-600/20' : ''} />
@@ -886,7 +926,7 @@ export function Dashboard({ user, onLogout, setUser }: DashboardProps) {
               </button>
               
               <button 
-                onClick={() => setActiveTab('reviews')}
+                onClick={() => handleTabChange('reviews')}
                 className={`flex flex-col items-center gap-1 flex-1 py-2 rounded-xl transition-all ${activeTab === 'reviews' ? 'text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}
               >
                 <Star size={24} className={activeTab === 'reviews' ? 'fill-indigo-600/20' : ''} />
@@ -894,7 +934,7 @@ export function Dashboard({ user, onLogout, setUser }: DashboardProps) {
               </button>
               
               <button 
-                onClick={() => setActiveTab('account')}
+                onClick={() => handleTabChange('account')}
                 className={`flex flex-col items-center gap-1 flex-1 py-2 rounded-xl transition-all ${activeTab === 'account' ? 'text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}
               >
                 <UserIcon size={24} className={activeTab === 'account' ? 'fill-indigo-600/20' : ''} />

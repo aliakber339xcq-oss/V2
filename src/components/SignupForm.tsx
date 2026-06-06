@@ -24,6 +24,12 @@ export function SignupForm({ onSignup, onSwitchToLogin }: SignupFormProps) {
   const [deviceFingerprint, setDeviceFingerprint] = useState<string | null>(null);
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const refCode = params.get('ref') || '';
+    if (refCode) {
+      setFormData(prev => ({ ...prev, referralCode: refCode }));
+    }
+
     const checkDevice = async () => {
       try {
         const fp = await fpPromise.load();

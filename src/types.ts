@@ -10,6 +10,7 @@ export interface User {
   lastCheckIn?: string;
   joinedAt: string;
   isPro?: boolean;
+  is_kyc_verified?: boolean;
 }
 
 export interface Task {
