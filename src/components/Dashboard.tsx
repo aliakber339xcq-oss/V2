@@ -158,23 +158,25 @@ export function Dashboard({ user, onLogout, setUser }: DashboardProps) {
           isProFlag = !!profile.is_pro;
         }
 
+        let updatedUser: User = { ...user, isPro: isProFlag };
+
         const { data } = await supabase.auth.getUser();
         if (data?.user) {
           const metadata = data.user.user_metadata || {};
           // Make sure we correctly update streak and balance
-          const updatedUser: User = {
-            ...user,
+          updatedUser = {
+            ...updatedUser,
             balance: metadata.balance ?? user.balance,
             streak: metadata.streak ?? user.streak,
             lastCheckIn: metadata.lastCheckIn ?? user.lastCheckIn,
-            isPro: isProFlag,
           };
-          // Update local state if there are changes
-          if (updatedUser.balance !== user.balance || updatedUser.streak !== user.streak || updatedUser.lastCheckIn !== user.lastCheckIn || updatedUser.isPro !== user.isPro) {
-             setUser(updatedUser);
-             localStorage.setItem('bdpay_user', JSON.stringify(updatedUser));
-             localStorage.setItem('bdpay_registered_user_data', JSON.stringify(updatedUser));
-          }
+        }
+        
+        // Update local state if there are changes
+        if (updatedUser.balance !== user.balance || updatedUser.streak !== user.streak || updatedUser.lastCheckIn !== user.lastCheckIn || updatedUser.isPro !== user.isPro) {
+           setUser(updatedUser);
+           localStorage.setItem('bdpay_user', JSON.stringify(updatedUser));
+           localStorage.setItem('bdpay_registered_user_data', JSON.stringify(updatedUser));
         }
       } catch (err) {
         console.error("Failed to refresh user:", err);
@@ -268,11 +270,6 @@ export function Dashboard({ user, onLogout, setUser }: DashboardProps) {
   const startTask = (taskId: string, taskTitle: string) => {
     if (taskId === 'recharge') {
       setIsRecharging(true);
-      return;
-    }
-    if (taskId === 'premium' && !user.isPro) {
-      toast.error('Premium Task-এর জন্য BD Pro একটিভ করতে হবে', { icon: '👑' });
-      setActiveTab('bdpro');
       return;
     }
     if (taskId === 'gmail') {

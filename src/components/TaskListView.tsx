@@ -4,6 +4,7 @@ import { TaskItem, User } from '../types';
 import { ArrowLeft, Clock, Gift } from 'lucide-react';
 import { motion } from 'motion/react';
 import { TaskSubmitView } from './TaskSubmitView';
+import toast from 'react-hot-toast';
 
 interface TaskListViewProps {
   taskType: string;
@@ -88,8 +89,15 @@ export function TaskListView({ taskType, categoryTitle, user, onBack }: TaskList
               key={task.id}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              onClick={() => setSelectedTask(task)}
-              className="bg-white rounded-2xl shadow-sm p-5 border border-slate-100 cursor-pointer flex justify-between items-center"
+              onClick={() => {
+                if (taskType === 'premium' && !user.isPro) {
+                  toast.error('এই টাস্কটি করার জন্য BD Pro একটিভ করতে হবে!', { icon: '👑' });
+                  // If we had a way to navigate back to BD Pro tab from here, we could.
+                  return;
+                }
+                setSelectedTask(task);
+              }}
+              className={`bg-white rounded-2xl shadow-sm p-5 border cursor-pointer flex justify-between items-center ${taskType === 'premium' && !user.isPro ? 'border-amber-200 bg-amber-50/30 opacity-80' : 'border-slate-100'}`}
             >
               <div>
                 <h3 className="font-bold text-slate-800 text-lg mb-1">{task.title}</h3>
@@ -98,8 +106,8 @@ export function TaskListView({ taskType, categoryTitle, user, onBack }: TaskList
                   <span>Reward: ৳ {Number(task.reward).toFixed(2)}</span>
                 </div>
               </div>
-              <div className="bg-primary text-white text-sm font-medium px-4 py-2 rounded-xl">
-                Start
+              <div className={`text-white text-sm font-medium px-4 py-2 rounded-xl ${taskType === 'premium' && !user.isPro ? 'bg-amber-500' : 'bg-primary'}`}>
+                {taskType === 'premium' && !user.isPro ? '👑 Pro Only' : 'Start'}
               </div>
             </motion.div>
           ))
