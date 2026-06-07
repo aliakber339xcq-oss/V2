@@ -62,15 +62,40 @@ export function AdminPanel({ onBack }: { onBack: () => void }) {
     const { data } = await supabase
       .from('withdrawals')
       .select('*')
-      .eq('status', 'pending')
+      .like('status', 'pending%')
       .order('created_at', { ascending: false });
     
-    if (data) setWithdrawals(data);
+    if (data) {
+      const parsedData = data.map(w => {
+         const parts = w.status.split('_');
+         if (parts.length >= 2) {
+           return {
+              ...w,
+              status: parts[0],
+              method: parts[1] || 'Unknown',
+              account_number: parts[2] || ''
+           };
+         }
+         return w;
+      });
+      setWithdrawals(parsedData);
+    }
     setLoading(false);
   };
 
   const handleWithdrawalAction = async (rec: any, action: 'approved' | 'rejected') => {
-    await supabase.from('withdrawals').update({ status: action }).eq('id', rec.id);
+    if (action === 'rejected') {
+      // Refund the amount to the user
+      const dummyId = '00000000-0000-0000-0000-000000000000';
+      await supabase.rpc('approve_task_submission', { 
+         p_submission_id: dummyId, 
+         p_user_id: rec.user_id, 
+         p_reward: Number(rec.amount) 
+      });
+    }
+
+    const newStatus = `${action}_${rec.method || ''}_${rec.account_number || ''}`;
+    await supabase.from('withdrawals').update({ status: newStatus }).eq('id', rec.id);
     setWithdrawals(withdrawals.filter(r => r.id !== rec.id));
   };
 

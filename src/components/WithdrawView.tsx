@@ -40,16 +40,34 @@ export function WithdrawView({ user, totalReferrals, onWithdraw }: { user: User,
     setError('');
 
     try {
+      // 1) Deduct balance
+      const dummyId = '00000000-0000-0000-0000-000000000000';
+      const { error: deductError } = await supabase.rpc('approve_task_submission', { 
+         p_submission_id: dummyId, 
+         p_user_id: user.id, 
+         p_reward: -numAmount 
+      });
+      
+      if (deductError) throw new Error('ব্যালেন্স কাটতে সমস্যা হয়েছে।');
+
+      // 2) Insert withdrawal request
       const { error: withdrawError } = await supabase.from('withdrawals').insert({
         user_id: user.id,
-        method,
-        account_number: accountNumber,
         amount: numAmount,
-        status: 'pending'
+        status: `pending_${method}_${accountNumber}`
       });
 
-      if (withdrawError) throw withdrawError;
+      if (withdrawError) {
+        // Rollback balance if insert failed
+        await supabase.rpc('approve_task_submission', { 
+           p_submission_id: dummyId, 
+           p_user_id: user.id, 
+           p_reward: numAmount 
+        });
+        throw withdrawError;
+      }
 
+      await supabase.auth.refreshSession();
       setSuccess(true);
       toast.success('Withdrawal request submitted successfully!', { icon: '💸' });
       setTimeout(() => {

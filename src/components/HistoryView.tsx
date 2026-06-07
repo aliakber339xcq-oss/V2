@@ -49,7 +49,7 @@ export function HistoryView({ user }: { user: User }) {
         .order('created_at', { ascending: false });
 
       if (statusFilter !== 'all') {
-        query = query.eq('status', statusFilter);
+        query = query.like('status', `${statusFilter}%`);
       }
 
       const from = (page - 1) * ITEMS_PER_PAGE;
@@ -59,7 +59,19 @@ export function HistoryView({ user }: { user: User }) {
       const { data, error } = await query;
       if (error) console.error("loadWithdrawals error:", error);
       if (data) {
-        setWithdrawals(data);
+        const parsedData = data.map(w => {
+           const parts = w.status.split('_');
+           if (parts.length >= 2) {
+             return {
+                ...w,
+                status: parts[0],
+                method: parts[1] || 'Unknown',
+                account_number: parts[2] || ''
+             };
+           }
+           return w;
+        });
+        setWithdrawals(parsedData);
       }
     } catch (err) {
       console.error("loadWithdrawals failed:", err);

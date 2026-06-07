@@ -313,3 +313,77 @@ BEGIN
   WHERE id = p_user_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION request_withdrawal(
+  p_method TEXT,
+  p_account TEXT,
+  p_amount NUMERIC
+) RETURNS void AS $$
+DECLARE
+  v_balance NUMERIC;
+BEGIN
+  -- Get user balance
+  SELECT COALESCE((raw_user_meta_data->>'balance')::numeric, 0) INTO v_balance
+  FROM auth.users WHERE id = auth.uid();
+
+  IF v_balance < p_amount THEN
+    RAISE EXCEPTION 'Insufficient balance';
+  END IF;
+
+  -- Deduct balance
+  UPDATE auth.users
+  SET raw_user_meta_data = jsonb_set(
+    COALESCE(raw_user_meta_data, '{}'::jsonb),
+    '{balance}',
+    to_jsonb(v_balance - p_amount)
+  )
+  WHERE id = auth.uid();
+
+  -- Insert withdrawal
+  INSERT INTO withdrawals (user_id, amount, status)
+  VALUES (auth.uid(), p_amount, 'pending_' || p_method || '_' || p_account);
+
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION process_withdrawal(
+  p_withdrawal_id UUID,
+  p_action TEXT
+) RETURNS void AS $$
+DECLARE
+  v_user_id UUID;
+  v_amount NUMERIC;
+  v_status TEXT;
+  v_balance NUMERIC;
+  v_parts TEXT[];
+BEGIN
+  SELECT user_id, amount, status INTO v_user_id, v_amount, v_status
+  FROM withdrawals WHERE id = p_withdrawal_id;
+
+  IF v_status NOT LIKE 'pending%' THEN
+    RAISE EXCEPTION 'Withdrawal is not pending';
+  END IF;
+
+  v_parts := string_to_array(v_status, '_');
+  
+  -- Update status
+  UPDATE withdrawals 
+  SET status = p_action || '_' || COALESCE(v_parts[2], '') || '_' || COALESCE(v_parts[3], '')
+  WHERE id = p_withdrawal_id;
+
+  -- Refund if rejected
+  IF p_action = 'rejected' THEN
+    SELECT COALESCE((raw_user_meta_data->>'balance')::numeric, 0) INTO v_balance
+    FROM auth.users WHERE id = v_user_id;
+
+    UPDATE auth.users
+    SET raw_user_meta_data = jsonb_set(
+      COALESCE(raw_user_meta_data, '{}'::jsonb),
+      '{balance}',
+      to_jsonb(v_balance + v_amount)
+    )
+    WHERE id = v_user_id;
+  END IF;
+
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
