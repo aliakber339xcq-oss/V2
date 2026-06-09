@@ -125,13 +125,35 @@ export function WithdrawView({ user, totalReferrals, onWithdraw }: { user: User,
         </ul>
       </div>
 
-      {success ? (
-        <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-6 text-center">
-          <CheckCircle2 className="w-12 h-12 text-emerald-500 mx-auto mb-2" />
-          <h3 className="font-bold text-emerald-800 text-lg">আবেদন সফল!</h3>
-          <p className="text-sm text-emerald-600">আপনার উত্তোলনের অনুরোধটি অ্যাডমিনের কাছে পাঠানো হয়েছে।</p>
+      {success && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+          <motion.div 
+            initial={{ scale: 0.8, opacity: 0 }} 
+            animate={{ scale: 1, opacity: 1 }} 
+            exit={{ scale: 0.8, opacity: 0 }}
+            className="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl"
+          >
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", stiffness: 200, damping: 15, delay: 0.1 }}
+              className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4"
+            >
+              <CheckCircle2 className="w-10 h-10 text-emerald-500" />
+            </motion.div>
+            <h3 className="font-bold text-slate-800 text-xl leading-tight mb-2">
+              আপনার Withdrawal সফল হয়েছে,<br/>
+              <span className="text-emerald-600 font-extrabold">{amount} টাকা</span> — {method === 'bkash' ? 'bKash' : method === 'nagad' ? 'Nagad' : method === 'rocket' ? 'Rocket' : method}
+            </h3>
+            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-4">
+              জমা হয়েছে, পেয়ে যাবেন
+            </p>
+          </motion.div>
         </div>
-      ) : (
+      )}
+
+      {/* Hide the form if success is true, or keep it visible behind the popup */}
+      {!success && (
         <form onSubmit={handleWithdraw} className="bg-white rounded-3xl shadow-sm p-6 border border-slate-100">
           
           {error && (

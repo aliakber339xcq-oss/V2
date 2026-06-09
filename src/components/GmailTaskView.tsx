@@ -180,72 +180,80 @@ export function GmailTaskView({ user, onBack }: { user: User, onBack: () => void
         )}
 
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-10 text-slate-500">
-            <Loader2 className="animate-spin mb-2" size={24} />
-            Checking available tasks...
+          <div className="flex flex-col items-center justify-center py-24 text-slate-400">
+            <Loader2 className="animate-spin mb-4 text-indigo-500" size={32} />
+            <span className="font-bold tracking-widest uppercase text-[10px]">Checking available tasks...</span>
           </div>
         ) : !task ? (
-          <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 text-center space-y-4">
-             <div className="w-16 h-16 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center mx-auto mb-2">
-                <PlayCircle size={32} />
+          <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="bg-white rounded-[32px] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-slate-100 p-8 text-center relative overflow-hidden">
+             <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-indigo-50 to-emerald-50 rounded-bl-full -mr-10 -mt-10 z-0"></div>
+             
+             <div className="relative z-10">
+               <div className="w-20 h-20 bg-gradient-to-br from-indigo-500 to-indigo-600 text-white rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl shadow-indigo-500/20 transform rotate-3">
+                  <PlayCircle size={36} className="-rotate-3" />
+               </div>
+               <h2 className="text-2xl font-black text-slate-800 tracking-tight mb-3">জিমেইল তৈরি করুন</h2>
+               <p className="text-[15px] font-medium text-slate-500 leading-relaxed max-w-[280px] mx-auto mb-8">
+                 কাজ শুরু করতে একটি টাস্ক লক করুন। আপনাকে First Name, Last Name, Email Prefix, এবং Password দেওয়া হবে।
+                 একাউন্ট তৈরি করে সাবমিট করার জন্য আপনি <strong className="text-indigo-600 font-bold bg-indigo-50 px-2 py-0.5 rounded-md">১ ঘন্টা</strong> সময় পাবেন।
+               </p>
+               <button 
+                 onClick={reserveTask}
+                 className="w-full bg-slate-900 text-white font-bold py-4 rounded-2xl hover:bg-black transition-all flex justify-center items-center gap-2 active:scale-95 shadow-lg shadow-black/10"
+               >
+                 <PlayCircle size={20} /> Find & Lock Task
+               </button>
              </div>
-             <h2 className="text-xl font-bold text-slate-800">জিমেইল তৈরি করুন</h2>
-             <p className="text-sm text-slate-500">
-               কাজ শুরু করতে একটি টাস্ক লক করুন। আপনাকে First Name, Last Name, Email Prefix, এবং Password দেওয়া হবে।
-               একাউন্ট তৈরি করে সাবমিট করার জন্য আপনি <strong className="text-slate-700">১ ঘন্টা</strong> সময় পাবেন।
-               <br/><br/>১ ঘন্টার মধ্যে সাবমিট না করলে টাস্কটি আনলক হয়ে যাবে।
-             </p>
-             <button 
-               onClick={reserveTask}
-               className="w-full bg-slate-900 text-white font-bold py-3.5 rounded-xl hover:bg-black transition-all flex justify-center mt-4"
-             >
-               Find & Lock Task
-             </button>
-          </div>
+          </motion.div>
         ) : (
-          <div className="space-y-4">
-             <div className="bg-amber-50 border border-amber-200 rounded-3xl p-5 text-center flex flex-col items-center justify-center shadow-sm">
-                <div className="flex items-center gap-2 text-amber-700 font-bold mb-1 uppercase tracking-wider text-xs">
+          <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="space-y-5">
+             <div className="bg-gradient-to-br from-amber-500 to-orange-500 rounded-[28px] p-6 text-center shadow-xl shadow-orange-500/20 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none"></div>
+                <div className="flex items-center justify-center gap-2 text-orange-100 font-extrabold mb-1.5 uppercase tracking-widest text-[11px] relative z-10">
                    <Clock size={16} /> Time Remaining
                 </div>
-                <div className="text-4xl font-black text-amber-600 font-mono tracking-tight">
+                <div className="text-5xl font-black text-white font-mono tracking-tighter relative z-10 drop-shadow-sm">
                    {formatTime(timeLeft)}
                 </div>
              </div>
              
-             <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-5 space-y-4">
-                <h3 className="font-bold text-slate-800 border-b border-slate-100 pb-3">Account Details</h3>
+             <div className="bg-white rounded-[28px] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-slate-100 p-6">
+                <h3 className="font-bold text-slate-800 border-b border-slate-100 pb-4 mb-5 text-[15px] flex items-center gap-2">
+                  <PlayCircle size={18} className="text-indigo-500" /> Account Details
+                </h3>
                 
-                <div>
-                   <label className="block text-xs font-bold text-slate-400 uppercase mb-1">First Name</label>
-                   <div className="flex items-center justify-between bg-slate-50 border border-slate-200 p-3 rounded-xl">
-                      <span className="font-bold text-slate-800">{task.first_name}</span>
-                      <button onClick={() => copyToClipboard(task.first_name)} className="text-indigo-600 bg-indigo-50 p-1.5 rounded-lg hover:bg-indigo-100"><Copy size={16}/></button>
-                   </div>
-                </div>
-                
-                <div>
-                   <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Last Name</label>
-                   <div className="flex items-center justify-between bg-slate-50 border border-slate-200 p-3 rounded-xl">
-                      <span className="font-bold text-slate-800">{task.last_name}</span>
-                      <button onClick={() => copyToClipboard(task.last_name)} className="text-indigo-600 bg-indigo-50 p-1.5 rounded-lg hover:bg-indigo-100"><Copy size={16}/></button>
-                   </div>
-                </div>
+                <div className="space-y-4">
+                  <div>
+                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">First Name</label>
+                     <div className="flex items-center justify-between bg-slate-50/80 border border-slate-100 p-3.5 rounded-2xl group hover:shadow-md transition-all">
+                        <span className="font-bold text-slate-800 text-[15px]">{task.first_name}</span>
+                        <button onClick={() => copyToClipboard(task.first_name)} className="text-slate-400 p-2 rounded-xl hover:bg-white hover:text-indigo-600 transition-colors shadow-sm bg-white border border-slate-100"><Copy size={16}/></button>
+                     </div>
+                  </div>
+                  
+                  <div>
+                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Last Name</label>
+                     <div className="flex items-center justify-between bg-slate-50/80 border border-slate-100 p-3.5 rounded-2xl group hover:shadow-md transition-all">
+                        <span className="font-bold text-slate-800 text-[15px]">{task.last_name}</span>
+                        <button onClick={() => copyToClipboard(task.last_name)} className="text-slate-400 p-2 rounded-xl hover:bg-white hover:text-indigo-600 transition-colors shadow-sm bg-white border border-slate-100"><Copy size={16}/></button>
+                     </div>
+                  </div>
 
-                <div>
-                   <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Email Prefix</label>
-                   <div className="flex items-center justify-between bg-slate-50 border border-slate-200 p-3 rounded-xl">
-                      <span className="font-bold text-slate-800">{task.email_prefix}</span>
-                      <button onClick={() => copyToClipboard(task.email_prefix)} className="text-indigo-600 bg-indigo-50 p-1.5 rounded-lg hover:bg-indigo-100"><Copy size={16}/></button>
-                   </div>
-                </div>
-                
-                <div>
-                   <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Password</label>
-                   <div className="flex items-center justify-between bg-slate-50 border border-slate-200 p-3 rounded-xl">
-                      <span className="font-bold text-slate-800 font-mono">{task.password}</span>
-                      <button onClick={() => copyToClipboard(task.password)} className="text-indigo-600 bg-indigo-50 p-1.5 rounded-lg hover:bg-indigo-100"><Copy size={16}/></button>
-                   </div>
+                  <div>
+                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Email Prefix</label>
+                     <div className="flex items-center justify-between bg-indigo-50/50 border border-indigo-100 p-3.5 rounded-2xl group hover:shadow-md transition-all">
+                        <span className="font-bold text-indigo-900 text-[15px]">{task.email_prefix}</span>
+                        <button onClick={() => copyToClipboard(task.email_prefix)} className="text-indigo-500 p-2 rounded-xl hover:bg-white hover:text-indigo-600 transition-colors shadow-sm bg-white border border-indigo-100"><Copy size={16}/></button>
+                     </div>
+                  </div>
+                  
+                  <div>
+                     <label className="block text-[10px] font-black text-emerald-600/70 uppercase tracking-widest mb-1.5 ml-1">Password</label>
+                     <div className="flex items-center justify-between bg-emerald-50/50 border border-emerald-100 p-3.5 rounded-2xl group hover:shadow-md transition-all">
+                        <span className="font-bold text-emerald-900 font-mono tracking-tight text-[15px]">{task.password}</span>
+                        <button onClick={() => copyToClipboard(task.password)} className="text-emerald-500 p-2 rounded-xl hover:bg-white hover:text-emerald-600 transition-colors shadow-sm bg-white border border-emerald-100"><Copy size={16}/></button>
+                     </div>
+                  </div>
                 </div>
                 
                 <div className="pt-2 text-sm text-slate-500 font-medium">
@@ -261,7 +269,7 @@ export function GmailTaskView({ user, onBack }: { user: User, onBack: () => void
                {submitting ? <Loader2 className="animate-spin" size={20} /> : <CheckCircle2 size={20} />}
                সাবমিট করুন
              </button>
-          </div>
+          </motion.div>
         )}
       </div>
     </motion.div>

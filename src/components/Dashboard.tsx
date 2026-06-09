@@ -17,6 +17,7 @@ import { UpdatesView } from './UpdatesView';
 import { SupportWidget } from './SupportWidget';
 import { BDProView } from './BDProView';
 import { KYCView } from './KYCView';
+import { TutorialView } from './TutorialView';
 import toast from 'react-hot-toast';
 
 interface DashboardProps {
@@ -29,9 +30,9 @@ export function Dashboard({ user, onLogout, setUser }: DashboardProps) {
   const [canCheckIn, setCanCheckIn] = useState(true);
   const [checkInMsg, setCheckInMsg] = useState('');
   const [isUpdating, setIsUpdating] = useState(false);
-  const [activeTab, setActiveTab] = useState<'home' | 'history' | 'withdraw' | 'reviews' | 'account' | 'admin' | 'updates' | 'bdpro' | 'kyc'>(() => {
+  const [activeTab, setActiveTab] = useState<'home' | 'history' | 'withdraw' | 'reviews' | 'account' | 'admin' | 'updates' | 'bdpro' | 'kyc' | 'tutorial'>(() => {
     const path = window.location.pathname.replace(/^\/+/, '').replace(/\/+$/, '');
-    return ['home', 'history', 'withdraw', 'reviews', 'account', 'admin', 'updates', 'bdpro', 'kyc'].includes(path) ? (path as any) : 'home';
+    return ['home', 'history', 'withdraw', 'reviews', 'account', 'admin', 'updates', 'bdpro', 'kyc', 'tutorial'].includes(path) ? (path as any) : 'home';
   });
 
   useEffect(() => {
@@ -378,9 +379,9 @@ export function Dashboard({ user, onLogout, setUser }: DashboardProps) {
                 
                 <div className="space-y-3 relative z-10">
                   {siteSettings.tutorial_url && (
-                     <a href={siteSettings.tutorial_url} target="_blank" rel="noopener noreferrer" className="w-full bg-slate-50 border border-slate-100 text-slate-700 py-3.5 rounded-2xl font-bold flex justify-center items-center gap-2 hover:bg-slate-100 transition-colors shadow-sm">
+                     <button onClick={() => { setActiveTab('tutorial'); setShowPopup(false); }} className="w-full bg-slate-50 border border-slate-100 text-slate-700 py-3.5 rounded-2xl font-bold flex justify-center items-center gap-2 hover:bg-slate-100 transition-colors shadow-sm">
                        Watch Tutorial <ChevronRight size={16} className="text-slate-400" />
-                     </a>
+                     </button>
                   )}
                   {siteSettings.telegram_url && (
                      <a href={siteSettings.telegram_url} target="_blank" rel="noopener noreferrer" className="w-full bg-[#2AABEE]/10 text-[#2AABEE] py-3.5 rounded-2xl font-bold flex justify-center items-center gap-2 hover:bg-[#2AABEE]/20 transition-colors shadow-sm">
@@ -490,6 +491,9 @@ export function Dashboard({ user, onLogout, setUser }: DashboardProps) {
                 </button>
                 <button onClick={() => { setActiveTab('history'); setIsMenuOpen(false); }} className={`w-full flex items-center gap-3 p-3 rounded-xl font-medium transition-colors ${activeTab === 'history' ? 'bg-primary/10 text-primary' : 'text-slate-700 hover:bg-slate-50'}`}>
                   <Clock size={20} className={activeTab === 'history' ? 'text-primary' : 'text-slate-400'} /> History
+                </button>
+                <button onClick={() => { setActiveTab('tutorial'); setIsMenuOpen(false); }} className={`w-full flex items-center gap-3 p-3 rounded-xl font-medium transition-colors ${activeTab === 'tutorial' ? 'bg-primary/10 text-primary' : 'text-slate-700 hover:bg-slate-50'}`}>
+                  <HelpCircle size={20} className={activeTab === 'tutorial' ? 'text-primary' : 'text-slate-400'} /> Tutorial
                 </button>
                 <button onClick={() => { setActiveTab('withdraw'); setIsMenuOpen(false); }} className={`w-full flex items-center gap-3 p-3 rounded-xl font-medium transition-colors ${activeTab === 'withdraw' ? 'bg-primary/10 text-primary' : 'text-slate-700 hover:bg-slate-50'}`}>
                   <Coins size={20} className={activeTab === 'withdraw' ? 'text-primary' : 'text-slate-400'} /> Withdraw
@@ -618,6 +622,32 @@ export function Dashboard({ user, onLogout, setUser }: DashboardProps) {
                   <div className="flex-1">
                     <p className="text-sm text-slate-500 font-bold tracking-wide uppercase mb-1">Main Balance</p>
                     <p className="text-3xl font-black text-slate-800 tracking-tight">৳ {user.balance.toFixed(2)}</p>
+                  </div>
+
+                  {/* Daily Goal Progress Ring */}
+                  <div className="relative w-[68px] h-[68px] flex items-center justify-center shrink-0" title="Daily Goal: 100 Taka">
+                    <svg className="w-full h-full transform -rotate-90 drop-shadow-sm" viewBox="0 0 36 36">
+                      <path
+                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                        fill="none"
+                        stroke="#f1f5f9"
+                        strokeWidth="3.5"
+                      />
+                      <motion.path
+                        initial={{ strokeDasharray: "0, 100" }}
+                        animate={{ strokeDasharray: `${Math.min((user.balance % 100 === 0 && user.balance > 0 ? 100 : user.balance % 100), 100)}, 100` }}
+                        transition={{ duration: 1.5, ease: 'easeOut', delay: 0.2 }}
+                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                        fill="none"
+                        stroke="#10b981"
+                        strokeWidth="3.5"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center mt-0.5">
+                      <span className="text-[9px] font-black tracking-wider uppercase text-slate-400">Goal</span>
+                      <span className="text-xs font-bold text-slate-700 leading-none mt-0.5">{Math.floor(user.balance % 100 === 0 && user.balance > 0 ? 100 : user.balance % 100)}%</span>
+                    </div>
                   </div>
                 </div>
               </motion.div>
@@ -806,6 +836,10 @@ export function Dashboard({ user, onLogout, setUser }: DashboardProps) {
 
         {activeTab === 'kyc' && (
           <KYCView user={user} onBack={() => setActiveTab('home')} />
+        )}
+
+        {activeTab === 'tutorial' && (
+          <TutorialView />
         )}
 
         {activeTab === 'account' && (

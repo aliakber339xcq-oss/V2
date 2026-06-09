@@ -210,6 +210,21 @@ export function ReviewView({ user }: { user: User }) {
             </motion.div>
           ))
         )}
+        
+        {reviews.length > 0 && !loading && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="py-10 flex flex-col items-center justify-center gap-3 text-slate-400"
+          >
+            <motion.div 
+              animate={{ rotate: 360 }} 
+              transition={{ repeat: Infinity, duration: 1.5, ease: 'linear' }} 
+              className="w-5 h-5 border-[3px] border-slate-200 border-t-slate-400 rounded-full" 
+            />
+            <span className="text-xs font-black tracking-widest uppercase opacity-70">Loading....</span>
+          </motion.div>
+        )}
       </div>
     </motion.div>
   );

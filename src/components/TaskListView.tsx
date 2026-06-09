@@ -77,37 +77,51 @@ export function TaskListView({ taskType, categoryTitle, user, onBack }: TaskList
 
       <div className="max-w-md mx-auto px-4 py-6 space-y-4">
         {loading ? (
-          <div className="text-center py-10 text-slate-500">Loading tasks...</div>
+          <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+             <div className="w-10 h-10 border-4 border-indigo-100 border-t-indigo-500 rounded-full animate-spin mb-4"></div>
+             <span className="font-bold uppercase tracking-widest text-[10px]">Loading Tasks...</span>
+          </div>
         ) : tasks.length === 0 ? (
-          <div className="bg-white rounded-2xl shadow-sm p-8 text-center text-slate-500">
-            <Clock className="w-12 h-12 text-slate-200 mx-auto mb-3" />
-            <p>No tasks available at the moment.</p>
+          <div className="bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 p-10 text-center">
+            <div className="w-20 h-20 bg-slate-50 text-slate-300 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Clock size={32} />
+            </div>
+            <h3 className="font-black text-slate-800 text-lg mb-1">No Tasks Available</h3>
+            <p className="text-slate-500 text-sm">Please check back later for new tasks.</p>
           </div>
         ) : (
-          tasks.map(task => (
+          tasks.map((task, i) => (
             <motion.div
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.05 }}
               key={task.id}
-              whileHover={{ scale: 1.02 }}
+              whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => {
                 if (taskType === 'premium' && !user.isPro) {
                   toast.error('এই টাস্কটি করার জন্য BD Pro একটিভ করতে হবে!', { icon: '👑' });
-                  // If we had a way to navigate back to BD Pro tab from here, we could.
                   return;
                 }
                 setSelectedTask(task);
               }}
-              className={`bg-white rounded-2xl shadow-sm p-5 border cursor-pointer flex justify-between items-center ${taskType === 'premium' && !user.isPro ? 'border-amber-200 bg-amber-50/30 opacity-80' : 'border-slate-100'}`}
+              className={`relative overflow-hidden bg-white rounded-[24px] shadow-[0_4px_20px_rgb(0,0,0,0.03)] border p-5 cursor-pointer flex flex-col gap-4 group ${taskType === 'premium' && !user.isPro ? 'border-amber-200 bg-gradient-to-br from-amber-50 to-white opacity-90' : 'border-slate-100'}`}
             >
-              <div>
-                <h3 className="font-bold text-slate-800 text-lg mb-1">{task.title}</h3>
-                <div className="flex items-center gap-1 xl text-emerald-600 font-medium text-sm border-emerald-100 bg-emerald-50 px-2 py-0.5 rounded-md inline-flex">
-                  <Gift size={14} /> 
-                  <span>Reward: ৳ {Number(task.reward).toFixed(2)}</span>
+              {taskType === 'premium' && (
+                <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-amber-100 to-amber-50 rounded-bl-full -mr-4 -mt-4 z-0 transition-transform group-hover:scale-110"></div>
+              )}
+              
+              <div className="relative z-10 flex justify-between items-start gap-4">
+                <div className="flex-1">
+                  <h3 className="font-black text-slate-800 text-lg leading-tight mb-2 group-hover:text-indigo-600 transition-colors">{task.title}</h3>
+                  <div className="inline-flex items-center gap-1.5 font-black text-[13px] tracking-wide text-emerald-700 bg-emerald-50 border border-emerald-100 px-3 py-1.5 rounded-xl">
+                    <Gift size={16} className="text-emerald-500" /> 
+                    <span>৳ {Number(task.reward).toFixed(2)}</span>
+                  </div>
                 </div>
-              </div>
-              <div className={`text-white text-sm font-medium px-4 py-2 rounded-xl ${taskType === 'premium' && !user.isPro ? 'bg-amber-500' : 'bg-primary'}`}>
-                {taskType === 'premium' && !user.isPro ? '👑 Pro Only' : 'Start'}
+                <div className={`shrink-0 flex items-center justify-center h-12 px-5 rounded-2xl font-bold tracking-wide text-sm shadow-sm transition-all ${taskType === 'premium' && !user.isPro ? 'bg-gradient-to-br from-amber-400 to-amber-500 text-white shadow-amber-500/20' : 'bg-gradient-to-br from-indigo-50 to-indigo-100 border border-indigo-200/50 text-indigo-700 group-hover:from-indigo-500 group-hover:to-indigo-600 group-hover:text-white group-hover:shadow-indigo-500/20'}`}>
+                  {taskType === 'premium' && !user.isPro ? '👑 Unlock' : 'Start'}
+                </div>
               </div>
             </motion.div>
           ))

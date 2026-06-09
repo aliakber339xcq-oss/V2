@@ -216,45 +216,56 @@ export function SupportWidget({ user }: { user: User }) {
             {/* Content Area */}
             <div className="flex-1 overflow-y-auto bg-slate-50 relative">
               {tab === 'home' ? (
-                <div className="p-4 space-y-4">
-                  <a 
+                <div className="p-4 space-y-5">
+                  <motion.a 
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                     href="https://t.me/Bdpaysite"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-full bg-[#0088cc] p-5 rounded-2xl shadow-sm flex items-center justify-between group hover:shadow-md transition-all text-left text-white mb-2"
+                    className="w-full bg-gradient-to-br from-[#0088cc] to-[#0077b3] p-5 rounded-3xl shadow-[0_8px_30px_rgb(0,136,204,0.3)] flex items-center justify-between group text-white relative overflow-hidden"
                   >
-                    <div>
-                      <h3 className="font-bold text-[16px] mb-1">Join our Telegram</h3>
-                      <p className="text-sm text-white/90">Get live updates & support</p>
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-bl-full -mr-10 -mt-10 pointer-events-none transition-transform group-hover:scale-110"></div>
+                    <div className="relative z-10">
+                      <h3 className="font-bold text-lg mb-0.5 tracking-tight">Join our Telegram</h3>
+                      <p className="text-sm font-medium text-white/80">Get live updates & support</p>
                     </div>
-                    <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center transition-colors group-hover:scale-105">
-                      <Send size={20} className="fill-white translate-x-0.5" />
+                    <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center transition-transform group-hover:rotate-12 relative z-10 shadow-inner border border-white/20">
+                      <Send size={20} className="fill-white translate-x-0.5 mt-0.5" />
                     </div>
-                  </a>
+                  </motion.a>
 
-                  <button 
+                  <motion.button 
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                     onClick={() => setTab('messages')}
-                    className="w-full bg-white p-5 rounded-2xl shadow-[0_2px_10px_rgba(0,0,0,0.04)] border border-slate-100 flex items-center justify-between group hover:shadow-md transition-all text-left"
+                    className="w-full bg-white p-5 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex items-center justify-between group transition-all text-left relative overflow-hidden"
                   >
-                    <div>
-                      <h3 className="font-bold text-slate-800 text-[15px] mb-1">Send us a message</h3>
-                      <p className="text-sm text-slate-500">We typically reply in a few minutes</p>
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-indigo-50/50 to-transparent rounded-bl-full pointer-events-none"></div>
+                    <div className="relative z-10">
+                      <h3 className="font-bold text-slate-800 text-lg mb-0.5 tracking-tight group-hover:text-indigo-600 transition-colors">Send us a message</h3>
+                      <p className="text-sm font-medium text-slate-500">We typically reply in a few minutes</p>
                     </div>
-                    <div className="w-10 h-10 bg-slate-50 rounded-full flex items-center justify-center text-slate-400 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">
-                      <Send size={18} />
+                    <div className="w-12 h-12 bg-slate-50 border border-slate-100 shadow-sm rounded-full flex items-center justify-center text-slate-400 group-hover:bg-indigo-50 group-hover:text-indigo-600 group-hover:border-indigo-100 transition-all relative z-10">
+                      <MessageSquare size={20} className="fill-indigo-600/10" />
                     </div>
-                  </button>
+                  </motion.button>
 
                   {updates.length > 0 && (
                     <div className="mt-8">
-                       <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 ml-2">Recent Updates</h4>
-                       <div className="space-y-3">
+                       <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4 ml-2 flex items-center gap-2">
+                         <div className="w-1.5 h-1.5 bg-indigo-400 rounded-full"></div> Recent Updates
+                       </h4>
+                       <div className="space-y-4">
                          {updates.map(update => (
-                           <div key={update.id} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+                           <div key={update.id} className="bg-white p-5 rounded-3xl border border-slate-100 shadow-[0_4px_20px_rgb(0,0,0,0.03)] group transition-all hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] relative overflow-hidden">
                              {update.images && update.images.length > 0 && (
-                                <img src={update.images[0]} className="w-full h-32 object-cover rounded-xl mb-3" alt="update" />
+                                <div className="mb-4 rounded-2xl overflow-hidden relative border border-slate-100">
+                                  <img src={update.images[0]} className="w-full h-36 object-cover group-hover:scale-105 transition-transform duration-500" alt="update" />
+                                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none"></div>
+                                </div>
                              )}
-                             <p className="text-sm text-slate-700 font-medium line-clamp-3">{update.text}</p>
+                             <p className="text-[14.5px] text-slate-700 font-medium leading-relaxed">{update.text}</p>
                            </div>
                          ))}
                        </div>
@@ -262,20 +273,30 @@ export function SupportWidget({ user }: { user: User }) {
                   )}
 
                   {reviews.length > 0 && (
-                    <div className="mt-8 mb-4">
-                       <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 ml-2">Recent Reviews</h4>
-                       <div className="space-y-3">
+                    <div className="mt-8 pb-4">
+                       <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4 ml-2 flex items-center gap-2">
+                         <div className="w-1.5 h-1.5 bg-amber-400 rounded-full"></div> Recent Reviews
+                       </h4>
+                       <div className="space-y-4 relative">
+                         <div className="absolute left-6 top-6 bottom-6 w-px bg-slate-200"></div>
                          {reviews.map(review => (
-                           <div key={review.id} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
-                             <div className="flex items-center gap-2 mb-2">
-                                <span className="font-bold text-xs text-slate-800">{review.reviewer_name}</span>
+                           <div key={review.id} className="relative z-10 pl-14 pr-2">
+                             <div className="absolute left-0 top-3 w-12 flex justify-center">
+                               <div className="w-12 h-12 bg-gradient-to-br from-amber-100 to-amber-50 text-amber-600 rounded-2xl flex items-center justify-center font-black text-xl shadow-inner border border-amber-200/50">
+                                 {review.reviewer_name.charAt(0)}
+                               </div>
                              </div>
-                             {review.image_url && (
-                                <img src={review.image_url} className="w-full h-24 object-cover rounded-xl mb-2" alt="review" />
-                             )}
-                             {review.text && (
-                                <p className="text-sm text-slate-600 line-clamp-2">{review.text}</p>
-                             )}
+                             <div className="bg-white p-5 rounded-3xl border border-slate-100 shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] transition-shadow">
+                                <h5 className="font-bold text-[14px] text-slate-800 mb-2">{review.reviewer_name}</h5>
+                                {review.image_url && (
+                                   <div className="mb-3 rounded-2xl overflow-hidden relative border border-slate-100">
+                                    <img src={review.image_url} className="w-full h-28 object-cover" alt="review" />
+                                   </div>
+                                )}
+                                {review.text && (
+                                   <p className="text-[13px] text-slate-600 leading-relaxed bg-slate-50 p-3 rounded-2xl border border-slate-100/50">{review.text}</p>
+                                )}
+                             </div>
                            </div>
                          ))}
                        </div>
@@ -290,36 +311,44 @@ export function SupportWidget({ user }: { user: User }) {
                            No messages yet. Send a message to start the conversation!
                        </div>
                     ) : (
-                      messages.map((msg, i) => (
-                        <div key={msg.id || i} className={`flex ${msg.sender_type === 'user' ? 'justify-end' : 'justify-start'} mb-2`}>
-                          {msg.sender_type === 'admin' && (
-                            <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex flex-col items-center justify-center shrink-0 mr-2 shadow-inner">
-                               <Bot size={14} />
-                            </div>
-                          )}
-                          <div className={`max-w-[75%] rounded-2xl px-4 py-3 shadow-sm ${msg.sender_type === 'user' ? 'bg-[#0088cc] text-white rounded-br-sm' : 'bg-white border border-slate-100 text-slate-800 rounded-bl-sm'}`}>
-                            {msg.image_url && (
-                              <div className="mb-2 rounded-xl overflow-hidden bg-black/5">
-                                 <img src={msg.image_url} alt="attachment" className="w-full max-h-48 object-cover" />
+                      messages.map((msg, i) => {
+                        const isUser = msg.sender_type === 'user';
+                        return (
+                          <motion.div 
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            key={msg.id || i} 
+                            className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4`}
+                          >
+                            {!isUser && (
+                              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-100 to-indigo-50 text-indigo-600 flex flex-col items-center justify-center shrink-0 mr-3 shadow-sm border border-indigo-100/50">
+                                 <Bot size={14} />
                               </div>
                             )}
-                            {msg.text && (
-                              <p className="text-[15px] whitespace-pre-wrap leading-relaxed">{msg.text}</p>
-                            )}
-                            <div className={`text-[10px] mt-1 font-bold ${msg.sender_type === 'user' ? 'text-white/60' : 'text-slate-400'} flex justify-end`}>
-                               {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            <div className={`max-w-[78%] px-4 py-3 shadow-[0_2px_8px_rgb(0,0,0,0.04)] ${isUser ? 'bg-gradient-to-br from-[#0088cc] to-[#0077b3] text-white rounded-[20px] rounded-br-sm' : 'bg-white border border-slate-100 text-slate-800 rounded-[20px] rounded-bl-sm'}`}>
+                              {msg.image_url && (
+                                <div className="mb-3 rounded-xl overflow-hidden bg-black/5 ring-1 ring-black/5">
+                                   <img src={msg.image_url} alt="attachment" className="w-full max-h-48 object-cover" />
+                                </div>
+                              )}
+                              {msg.text && (
+                                <p className="text-[14.5px] whitespace-pre-wrap leading-relaxed">{msg.text}</p>
+                              )}
+                              <div className={`text-[9px] mt-1.5 font-bold tracking-wider uppercase ${isUser ? 'text-white/70' : 'text-slate-400'} flex justify-end`}>
+                                 {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              </div>
                             </div>
-                          </div>
-                        </div>
-                      ))
+                          </motion.div>
+                        );
+                      })
                     )}
-                    <div ref={messagesEndRef} />
+                    <div ref={messagesEndRef} className="h-2" />
                   </div>
                   
                   {/* Chat Input */}
-                  <div className="bg-white p-3 border-t border-slate-100 flex items-end gap-2">
-                    <label className="p-3 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl cursor-pointer transition-colors shrink-0">
-                      <ImageIcon size={20} />
+                  <div className="bg-white/80 backdrop-blur-md p-3 border-t border-slate-100 flex items-end gap-2 shadow-[0_-4px_20px_rgb(0,0,0,0.02)] relative z-20">
+                    <label className="p-3 text-slate-400 hover:text-indigo-600 hover:bg-slate-100 rounded-2xl cursor-pointer transition-colors shrink-0">
+                      <ImageIcon size={22} />
                       <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} disabled={uploading} />
                     </label>
                     <textarea 
@@ -331,17 +360,17 @@ export function SupportWidget({ user }: { user: User }) {
                           handleSend();
                         }
                       }}
-                      placeholder={uploading ? "Uploading image..." : "Write a message..."}
-                      className="flex-1 max-h-32 min-h-[44px] bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 resize-none py-3"
+                      placeholder={uploading ? "Uploading image..." : "Type your message..."}
+                      className="flex-1 max-h-32 min-h-[48px] bg-slate-100/80 border-transparent rounded-2xl px-4 py-3.5 text-[15px] focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#0088cc]/20 focus:border-[#0088cc]/20 transition-all resize-none shadow-inner"
                       rows={1}
                       disabled={uploading}
                     />
                     <button 
                       onClick={handleSend}
                       disabled={!text.trim() || uploading}
-                      className="p-3 bg-[#0088cc] text-white rounded-xl disabled:opacity-50 shrink-0 hover:bg-[#0077b3] transition-colors"
+                      className="p-3.5 bg-gradient-to-br from-[#0088cc] to-[#0077b3] text-white rounded-2xl disabled:opacity-50 shrink-0 hover:shadow-lg hover:shadow-[#0088cc]/20 transition-all active:scale-95"
                     >
-                      <Send size={20} />
+                      <Send size={20} className="translate-x-0.5 -translate-y-0.5" />
                     </button>
                   </div>
                 </div>
