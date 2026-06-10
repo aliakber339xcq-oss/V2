@@ -68,6 +68,7 @@ export function Dashboard({ user, onLogout, setUser }: DashboardProps) {
 
   const [siteSettings, setSiteSettings] = useState<any>(null);
   const [showPopup, setShowPopup] = useState(false);
+  const [showSpecialTaskPopup, setShowSpecialTaskPopup] = useState(false);
   const [taskCounts, setTaskCounts] = useState<Record<string, number>>({});
 
   const isAdmin = user.gmail === 'admin@gmail.com';
@@ -106,6 +107,10 @@ export function Dashboard({ user, onLogout, setUser }: DashboardProps) {
           });
           
           setTaskCounts(counts);
+
+          if (counts['special'] > 0) {
+            setShowSpecialTaskPopup(true);
+          }
         }
       } catch (err) {
         console.error("Failed to fetch task counts", err);
@@ -340,9 +345,58 @@ export function Dashboard({ user, onLogout, setUser }: DashboardProps) {
 
   return (
     <div className="min-h-screen bg-[#FAFAFA] flex flex-col">
+      {/* Special Task Popup */}
+      <AnimatePresence>
+        {showSpecialTaskPopup && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            onClick={() => setShowSpecialTaskPopup(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              className="bg-white rounded-[2.5rem] p-8 w-full max-w-sm shadow-2xl relative overflow-hidden text-center"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="absolute top-0 right-0 w-48 h-48 bg-purple-50/50 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
+              <div className="absolute bottom-0 left-0 w-32 h-32 bg-indigo-50/50 rounded-full blur-2xl -ml-10 -mb-10 pointer-events-none"></div>
+              
+              <button onClick={() => setShowSpecialTaskPopup(false)} className="absolute top-5 right-5 text-slate-400 hover:text-slate-600 bg-slate-50 hover:bg-slate-100 p-2 rounded-full transition-colors z-10">
+                <X size={18} />
+              </button>
+              
+              <div className="relative z-10 mb-6">
+                <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-indigo-600 text-white rounded-3xl flex items-center justify-center mx-auto shadow-lg shadow-purple-500/30 transform -rotate-3 hover:rotate-0 transition-transform">
+                  <Video size={36} className="absolute opacity-20" />
+                  <Star size={32} className="relative z-10" fill="currentColor" />
+                </div>
+              </div>
+
+              <h2 className="text-2xl font-black text-slate-800 mb-2 tracking-tight relative z-10">Special Task!</h2>
+              <div className="text-sm text-slate-500 font-medium mb-8 leading-relaxed relative z-10 px-2">
+                A high-paying Special Task is waiting for you. Complete it now before it's gone!
+              </div>
+              
+              <div className="space-y-3 relative z-10">
+                <button onClick={() => { setShowSpecialTaskPopup(false); setActiveTaskCategory('special'); }} className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-4 rounded-2xl font-black shadow-lg shadow-purple-500/30 hover:shadow-purple-500/40 active:scale-[0.98] transition-all uppercase tracking-wide text-sm">
+                  View Special Tasks
+                </button>
+                <button onClick={() => setShowSpecialTaskPopup(false)} className="w-full bg-slate-50 text-slate-600 py-3 rounded-2xl font-bold hover:bg-slate-100 transition-colors">
+                  Maybe Later
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Welcome Popup */}
       <AnimatePresence>
-        {showPopup && siteSettings && (
+        {!showSpecialTaskPopup && showPopup && siteSettings && (
           <>
             <motion.div 
               initial={{ opacity: 0 }}

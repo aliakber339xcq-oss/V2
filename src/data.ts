@@ -22,6 +22,7 @@ export const TASK_LIST = [
   { id: 'playstore', title: 'Playstore Task', icon: Gamepad2, color: 'text-green-500', bg: 'bg-green-100' },
   { id: 'typing', title: 'Typing Task', icon: Keyboard, color: 'text-slate-600', bg: 'bg-slate-200' },
   { id: 'tiktok', title: 'Tiktok Task', icon: Smartphone, color: 'text-pink-500', bg: 'bg-pink-100' },
+  { id: 'special', title: 'Special Task', icon: Video, color: 'text-purple-500', bg: 'bg-purple-100' },
   { id: 'premium', title: 'Premium Task', icon: Crown, color: 'text-amber-500', bg: 'bg-amber-100' },
   { id: 'recharge', title: 'Mobile Recharge', icon: CreditCard, color: 'text-indigo-500', bg: 'bg-indigo-100' },
 ];

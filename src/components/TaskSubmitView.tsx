@@ -117,6 +117,16 @@ export function TaskSubmitView({ task, user, onBack, onSuccess }: { task: TaskIt
     );
   }
 
+  const getEmbedUrl = (input: string) => {
+    let fbUrl = input.trim();
+    if (/^\d+$/.test(fbUrl)) {
+        fbUrl = `https://www.facebook.com/video.php?v=${fbUrl}`;
+    } else if (fbUrl.includes('/reel/') || fbUrl.includes('/share/r/')) {
+        fbUrl = fbUrl.split('?')[0]; // Clean query string for clean embed
+    }
+    return `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(fbUrl)}&show_text=false&width=auto`;
+  };
+
   return (
     <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
       <div className="bg-primary px-4 py-4 sticky top-0 z-20 shadow-sm flex items-center gap-3 text-white">
@@ -153,6 +163,19 @@ export function TaskSubmitView({ task, user, onBack, onSuccess }: { task: TaskIt
               <h3 className="font-bold text-slate-800 mb-2">Tutorial</h3>
               {task.tutorial_url.match(/\.(jpeg|jpg|gif|png|webp)$/i) ? (
                 <img src={task.tutorial_url} alt="Task Tutorial" className="w-full rounded-xl object-contain border border-slate-200" />
+              ) : task.task_type === 'special' || /^\d+$/.test(task.tutorial_url) || task.tutorial_url.includes('facebook') || task.tutorial_url.includes('fb.watch') ? (
+                <div className="relative w-full overflow-hidden aspect-[9/16] max-w-[320px] mx-auto bg-slate-900 rounded-[24px] shadow-lg flex items-center justify-center border-4 border-slate-100 mb-2">
+                  <iframe 
+                    src={getEmbedUrl(task.tutorial_url)} 
+                    className="absolute top-0 left-0 w-full h-full bg-black/5"
+                    style={{ border: 'none', overflow: 'hidden' }}
+                    scrolling="no" 
+                    frameBorder="0" 
+                    allowFullScreen={true} 
+                    allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+                    title="Task Tutorial Video"
+                  />
+                </div>
               ) : (
                 <a
                   href={task.tutorial_url}
