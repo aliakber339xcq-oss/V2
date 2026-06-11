@@ -48,7 +48,7 @@ export function HistoryView({ user }: { user: User }) {
         .from('withdrawals')
         .select('amount')
         .eq('user_id', user.id)
-        .eq('status', 'approved');
+        .like('status', 'approved%');
       
       if (statsData) {
         setWithdrawalStats({
