@@ -203,7 +203,20 @@ export function AdminPanel({ onBack }: { onBack: () => void }) {
       .select('*')
       .in('status', ['available', 'locked', 'submitted'])
       .order('created_at', { ascending: false });
-    if (data) setGmailTasks(data);
+    
+    if (data && data.length > 0) {
+      const userIds = [...new Set(data.map(t => t.locked_by).filter(Boolean))];
+      if (userIds.length > 0) {
+        const { data: profiles } = await supabase.from('user_profiles').select('*').in('user_id', userIds);
+        const profileMap: any = {};
+        if (profiles) profiles.forEach(p => profileMap[p.user_id] = p);
+        setGmailTasks(data.map(t => ({ ...t, user_profile: profileMap[t.locked_by] })));
+      } else {
+        setGmailTasks(data);
+      }
+    } else {
+      setGmailTasks([]);
+    }
     setLoading(false);
   };
 
@@ -291,7 +304,19 @@ export function AdminPanel({ onBack }: { onBack: () => void }) {
       .select('*, tasks(*)')
       .eq('status', 'pending');
     
-    if (subsData) setSubmissions(subsData);
+    if (subsData && subsData.length > 0) {
+      const userIds = [...new Set(subsData.map(s => s.user_id).filter(Boolean))];
+      if (userIds.length > 0) {
+        const { data: profiles } = await supabase.from('user_profiles').select('*').in('user_id', userIds);
+        const profileMap: any = {};
+        if (profiles) profiles.forEach(p => profileMap[p.user_id] = p);
+        setSubmissions(subsData.map(s => ({ ...s, user_profile: profileMap[s.user_id] })));
+      } else {
+        setSubmissions(subsData);
+      }
+    } else {
+      setSubmissions([]);
+    }
     setLoading(false);
   };
 
@@ -634,7 +659,14 @@ export function AdminPanel({ onBack }: { onBack: () => void }) {
                   <div>
                     <h3 className="font-bold text-slate-800">{sub.tasks?.title || 'Unknown Task'}</h3>
                     <p className="text-xs text-slate-500">Reward: ৳{sub.tasks?.reward}</p>
-                    <p className="text-xs text-slate-500 mt-1">User ID: {sub.user_id?.slice(0, 8)}...</p>
+                    {sub.user_profile ? (
+                      <p className="text-xs text-slate-600 mt-1 font-medium flex items-center gap-2">
+                        <span>User: {sub.user_profile.name}</span>
+                        <span className="bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded tracking-wide font-bold">{sub.user_profile.number || sub.user_profile.email}</span>
+                      </p>
+                    ) : (
+                      <p className="text-xs text-slate-500 mt-1">User ID: {sub.user_id?.slice(0, 8)}...</p>
+                    )}
                   </div>
                 </div>
                 
@@ -804,7 +836,12 @@ export function AdminPanel({ onBack }: { onBack: () => void }) {
                            {task.first_name} {task.last_name}
                            <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-500">{task.status}</span>
                          </span>
-                         <p className="text-[12px] text-slate-500 font-medium">{task.email_prefix}@gmail.com <span className="mx-1">•</span> <span className="font-mono text-slate-400">Pass: {task.password}</span></p>
+                         <p className="text-[12px] text-slate-500 font-medium pb-1">{task.email_prefix}@gmail.com <span className="mx-1">•</span> <span className="font-mono text-slate-400">Pass: {task.password}</span></p>
+                         {task.user_profile && (
+                            <p className="text-[11px] text-indigo-600 font-bold bg-indigo-50 px-2 py-0.5 rounded-md inline-block">
+                              User: {task.user_profile.name} ({task.user_profile.number || task.user_profile.email})
+                            </p>
+                         )}
                        </div>
                     </div>
                     <div className="flex items-center gap-2">
