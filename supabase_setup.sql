@@ -36,6 +36,7 @@ BEGIN
   -- Update submission status
   UPDATE submissions SET status = 'approved' WHERE id = p_submission_id;
 
+
   -- Add reward to user's auth metadata balance
   UPDATE auth.users
   SET raw_user_meta_data = jsonb_set(
@@ -306,6 +307,44 @@ SET
 WHERE number IS NULL;
 
 ALTER TABLE device_fingerprints DISABLE ROW LEVEL SECURITY;
+
+ALTER TABLE submissions ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
+
+CREATE OR REPLACE FUNCTION auto_process_pending_tasks(
+  p_user_id UUID,
+  p_minimum_hours INTEGER DEFAULT 1
+) RETURNS void AS $$
+DECLARE
+  sub RECORD;
+  rand NUMERIC;
+BEGIN
+  FOR sub IN
+    SELECT s.id, t.reward 
+    FROM submissions s
+    JOIN tasks t ON s.task_id = t.id
+    WHERE s.user_id = p_user_id 
+      AND s.status = 'pending'
+      AND t.task_type != 'gmail'
+      AND s.created_at <= NOW() - (p_minimum_hours || ' hours')::interval
+  LOOP
+    rand := random();
+    IF rand <= 0.90 THEN
+      UPDATE submissions SET status = 'approved', updated_at = NOW() WHERE id = sub.id;
+      
+      UPDATE auth.users
+      SET raw_user_meta_data = jsonb_set(
+        COALESCE(raw_user_meta_data, '{}'::jsonb),
+        '{balance}',
+        to_jsonb(COALESCE((raw_user_meta_data->>'balance')::numeric, 0) + sub.reward)
+      )
+      WHERE id = p_user_id;
+    ELSE
+      UPDATE submissions SET status = 'rejected', updated_at = NOW() WHERE id = sub.id;
+    END IF;
+  END LOOP;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 CREATE OR REPLACE FUNCTION approve_gmail_task(
   p_task_id UUID,
   p_user_id UUID,

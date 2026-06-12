@@ -660,9 +660,10 @@ export function AdminPanel({ onBack }: { onBack: () => void }) {
                     <h3 className="font-bold text-slate-800">{sub.tasks?.title || 'Unknown Task'}</h3>
                     <p className="text-xs text-slate-500">Reward: ৳{sub.tasks?.reward}</p>
                     {sub.user_profile ? (
-                      <p className="text-xs text-slate-600 mt-1 font-medium flex items-center gap-2">
+                      <p className="text-xs text-slate-600 mt-1 font-medium flex flex-wrap items-center gap-2">
                         <span>User: {sub.user_profile.name}</span>
-                        <span className="bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded tracking-wide font-bold">{sub.user_profile.number || sub.user_profile.email}</span>
+                        <span className="bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded tracking-wide font-bold">{sub.user_profile.number || ''}</span>
+                        <span className="bg-indigo-50 text-indigo-600 px-1.5 py-0.5 rounded tracking-wide font-bold">{sub.user_profile.email}</span>
                       </p>
                     ) : (
                       <p className="text-xs text-slate-500 mt-1">User ID: {sub.user_id?.slice(0, 8)}...</p>
@@ -838,8 +839,10 @@ export function AdminPanel({ onBack }: { onBack: () => void }) {
                          </span>
                          <p className="text-[12px] text-slate-500 font-medium pb-1">{task.email_prefix}@gmail.com <span className="mx-1">•</span> <span className="font-mono text-slate-400">Pass: {task.password}</span></p>
                          {task.user_profile && (
-                            <p className="text-[11px] text-indigo-600 font-bold bg-indigo-50 px-2 py-0.5 rounded-md inline-block">
-                              User: {task.user_profile.name} ({task.user_profile.number || task.user_profile.email})
+                            <p className="text-[11px] text-indigo-600 font-bold bg-indigo-50 px-2 py-0.5 rounded-md mt-1 inline-flex flex-wrap gap-2 items-center">
+                              <span>User: {task.user_profile.name}</span>
+                              {task.user_profile.number && <span>({task.user_profile.number})</span>}
+                              <span className="bg-white/50 px-1 rounded">{task.user_profile.email}</span>
                             </p>
                          )}
                        </div>
