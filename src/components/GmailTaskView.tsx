@@ -193,10 +193,16 @@ export function GmailTaskView({ user, onBack }: { user: User, onBack: () => void
                   <PlayCircle size={36} className="-rotate-3" />
                </div>
                <h2 className="text-2xl font-black text-slate-800 tracking-tight mb-3">জিমেইল তৈরি করুন</h2>
-               <p className="text-[15px] font-medium text-slate-500 leading-relaxed max-w-[280px] mx-auto mb-8">
-                 কাজ শুরু করতে একটি টাস্ক লক করুন। আপনাকে First Name, Last Name, Email Prefix, এবং Password দেওয়া হবে।
-                 একাউন্ট তৈরি করে সাবমিট করার জন্য আপনি <strong className="text-indigo-600 font-bold bg-indigo-50 px-2 py-0.5 rounded-md">১ ঘন্টা</strong> সময় পাবেন।
-               </p>
+               <div className="text-left text-[13px] text-slate-600 space-y-2 mb-8 bg-slate-50 p-4 rounded-xl border border-slate-100 mt-4 mx-auto max-w-[300px]">
+                  <p className="font-bold text-slate-800 mb-2 border-b border-slate-200 pb-2">কাজের নিয়মাবলি:</p>
+                  <ul className="list-decimal pl-4 space-y-2 font-medium">
+                    <li>প্রথমে Find & Lock Task বাটনে ক্লিক করুন।</li>
+                    <li>আপনাকে যে নাম, পাসওয়ার্ড ও ইমেইল দেওয়া হবে, শুধু সেগুলো দিয়েই নতুন জিমেইল খুলতে হবে।</li>
+                    <li>জিমেইল খোলার পর কোনো রিকভারি ইমেইল বা নাম্বার যুক্ত করবেন না।</li>
+                    <li>একাউন্ট তৈরি করে সাবমিট করার জন্য <strong className="text-indigo-600 bg-indigo-50 px-1 rounded">১ ঘন্টা</strong> সময় পাবেন।</li>
+                    <li>সফলভাবে খোলার পর নিচে সাবমিট বাটনে ক্লিক করুন।</li>
+                  </ul>
+               </div>
                <button 
                  onClick={reserveTask}
                  className="w-full bg-slate-900 text-white font-bold py-4 rounded-2xl hover:bg-black transition-all flex justify-center items-center gap-2 active:scale-95 shadow-lg shadow-black/10"

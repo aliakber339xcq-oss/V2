@@ -82,13 +82,28 @@ export function TaskListView({ taskType, categoryTitle, user, onBack }: TaskList
              <span className="font-bold uppercase tracking-widest text-[10px]">Loading Tasks...</span>
           </div>
         ) : tasks.length === 0 ? (
-          <div className="bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 p-10 text-center">
-            <div className="w-20 h-20 bg-slate-50 text-slate-300 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Clock size={32} />
+          taskType === 'premium' ? (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="py-20 flex flex-col items-center justify-center gap-3 text-slate-400 mt-10"
+            >
+              <motion.div 
+                animate={{ rotate: 360 }} 
+                transition={{ repeat: Infinity, duration: 1.5, ease: 'linear' }} 
+                className="w-6 h-6 border-[3px] border-slate-200 border-t-indigo-500 rounded-full mb-2" 
+              />
+              <span className="text-xs font-black tracking-widest uppercase opacity-70">Loading....</span>
+            </motion.div>
+          ) : (
+            <div className="bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 p-10 text-center">
+              <div className="w-20 h-20 bg-slate-50 text-slate-300 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Clock size={32} />
+              </div>
+              <h3 className="font-black text-slate-800 text-lg mb-1">No Tasks Available</h3>
+              <p className="text-slate-500 text-sm">Please check back later for new tasks.</p>
             </div>
-            <h3 className="font-black text-slate-800 text-lg mb-1">No Tasks Available</h3>
-            <p className="text-slate-500 text-sm">Please check back later for new tasks.</p>
-          </div>
+          )
         ) : (
           tasks.map((task, i) => (
             <motion.div

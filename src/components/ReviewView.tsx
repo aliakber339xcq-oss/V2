@@ -17,12 +17,7 @@ export function ReviewView({ user }: { user: User }) {
 
   const loadReviews = async () => {
     setLoading(true);
-    let query = supabase.from('reviews').select('*').order('created_at', { ascending: false });
-    
-    // Admin sees all, users see admin reviews and their own reviews
-    if (!isAdmin) {
-      query = query.or(`is_admin.eq.true,user_id.eq.${user.id}`);
-    }
+    let query = supabase.from('reviews').select('*').order('created_at', { ascending: false }).eq('user_id', user.id);
     
     const { data } = await query;
     if (data) setReviews(data);
@@ -74,7 +69,7 @@ export function ReviewView({ user }: { user: User }) {
     const reviewerName = isAdmin && fakeName ? fakeName : (user.name || 'User');
     
     const { error } = await supabase.from('reviews').insert({
-      user_id: isAdmin ? null : user.id, // Admin posts as generic if they want, or we can save their id
+      user_id: user.id, // Everyone saves their own id
       reviewer_name: reviewerName,
       text,
       image_url: imageUrl,

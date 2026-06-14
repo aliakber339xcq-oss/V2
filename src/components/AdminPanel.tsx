@@ -16,6 +16,7 @@ export function AdminPanel({ onBack }: { onBack: () => void }) {
   const [rechargeOffers, setRechargeOffers] = useState<any[]>([]);
   const [settings, setSettings] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const [keys, setKeys] = useState<{id: string, api_key: string, is_active: boolean}[]>([]);
   const [newKey, setNewKey] = useState('');
@@ -436,8 +437,22 @@ export function AdminPanel({ onBack }: { onBack: () => void }) {
 
   const deleteTask = async (id: string) => {
     if (!window.confirm('Are you sure you want to delete this task?')) return;
-    await supabase.from('tasks').delete().eq('id', id);
-    setTasks(tasks.filter(t => t.id !== id));
+    try {
+      // First delete any submissions referencing this task to avoid foreign key errors
+      await supabase.from('submissions').delete().eq('task_id', id);
+      const { error } = await supabase.from('tasks').delete().eq('id', id);
+      if (error) {
+         if (error.message.includes('foreign key')) {
+             alert('Cannot delete this task. It may be referenced by other records.');
+         } else {
+             alert(error.message);
+         }
+      } else {
+         setTasks(tasks.filter(t => t.id !== id));
+      }
+    } catch (e) {
+      alert('Delete failed');
+    }
   };
 
 
@@ -556,7 +571,24 @@ export function AdminPanel({ onBack }: { onBack: () => void }) {
         {tab === 'users' && (
           <div className="space-y-4">
             <h2 className="text-lg font-bold text-slate-800">User Management</h2>
-            {loading ? <p className="text-slate-500">Loading...</p> : users.length === 0 ? <p className="text-slate-500">No users found.</p> : users.map(u => (
+            <div className="mb-4">
+              <input 
+                type="text" 
+                placeholder="Search by Name, Email, Phone, or ID..." 
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+                className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm"
+              />
+            </div>
+            {loading ? <p className="text-slate-500">Loading...</p> : users.length === 0 ? <p className="text-slate-500">No users found.</p> : users.filter(u => {
+              const query = searchTerm.toLowerCase();
+              return (
+                (u.name && u.name.toLowerCase().includes(query)) ||
+                (u.email && u.email.toLowerCase().includes(query)) ||
+                (u.number && u.number.toLowerCase().includes(query)) ||
+                (u.user_id && u.user_id.toLowerCase().includes(query))
+              );
+            }).map(u => (
               <div key={u.user_id} className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col gap-3 group hover:border-indigo-200 transition-colors">
                 <div className="flex items-start gap-4">
                   <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center font-black text-lg uppercase shadow-inner shrink-0 group-hover:scale-105 transition-transform">

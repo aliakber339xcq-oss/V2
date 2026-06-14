@@ -95,6 +95,9 @@ export function Dashboard({ user, onLogout, setUser }: DashboardProps) {
         const { data: allTasks } = await supabase.from('tasks').select('id, task_type').eq('is_active', true);
         const { data: userSubmissions } = await supabase.from('submissions').select('task_id').eq('user_id', user.id).in('status', ['pending', 'approved']);
         
+        // Also fetch available gmail tasks
+        const { count: gmailCount } = await supabase.from('gmail_tasks').select('*', { count: 'exact', head: true }).eq('status', 'available');
+
         if (allTasks) {
           const completedTaskIds = new Set((userSubmissions || []).map(s => s.task_id));
           const counts: Record<string, number> = {};
@@ -104,6 +107,10 @@ export function Dashboard({ user, onLogout, setUser }: DashboardProps) {
               counts[task.task_type] = (counts[task.task_type] || 0) + 1;
             }
           });
+          
+          if (gmailCount !== null) {
+            counts['gmail'] = gmailCount;
+          }
           
           setTaskCounts(counts);
         }
@@ -813,7 +820,7 @@ export function Dashboard({ user, onLogout, setUser }: DashboardProps) {
                           <Star size={28} className="fill-white" />
                         </div>
                         <div>
-                          <span className="inline-block px-2.5 py-1 bg-amber-500/20 text-amber-300 text-[10px] font-black rounded-lg tracking-wider uppercase mb-1.5 border border-amber-500/30">High Reward</span>
+                          <span className="inline-block px-2.5 py-1 bg-amber-500/20 text-amber-300 text-[10px] font-black rounded-lg tracking-wider uppercase mb-1.5 border border-amber-500/30">99+ Available</span>
                           <h3 className="font-black text-white text-xl leading-tight group-hover:text-amber-300 transition-colors">{premiumTask.title}</h3>
                           <p className="text-xs text-slate-400 mt-1 font-medium">Complete special tasks for top payouts</p>
                         </div>
